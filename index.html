@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ENE-LOG - The Perfect Integration</title>
+    <title>ENE-LOG - Reborn</title>
     <style>
         :root {
             --seiryu-blue: #00e5ff; --deep-blue: #001a33;
@@ -14,54 +14,54 @@
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         body, html { width: 100%; height: 100%; font-family: 'Hiragino Mincho ProN', serif; overflow: hidden; background: #000; }
 
-        /* --- Layers --- */
+        /* --- UI Layers --- */
         #setup-layer { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 9999; display: flex; align-items: center; justify-content: center; color: white; text-align: center; }
         header { position: fixed; top: 0; width: 100%; height: var(--header-h); background: rgba(255,255,255,0.95); display: flex; align-items: center; justify-content: space-between; padding: 0 15px; z-index: 3000; }
         
         .view { display: none; width: 100%; height: calc(100vh - var(--nav-h)); position: absolute; top: 0; left: 0; overflow-y: auto; background: #f0f4f8; }
         .view.active { display: block; }
 
-        /* --- Map & Layer Buttons --- */
+        /* --- Map (右側にレイヤーボタン) --- */
         #home-view { background: #07192f url('https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&q=80&w=2000') center/cover; }
-        .layer-side-nav { position: absolute; right: 15px; top: 80px; display: flex; flex-direction: column; gap: 10px; z-index: 3500; }
-        .side-btn { width: 45px; height: 45px; border-radius: 50%; border: 2px solid white; color: white; font-size: 0.7rem; font-weight: bold; display: flex; align-items: center; justify-content: center; opacity: 0.4; transition: 0.3s; }
-        .side-btn.active { opacity: 1; transform: scale(1.1); box-shadow: 0 0 15px var(--seiryu-blue); }
+        .layer-side-nav { position: absolute; right: 15px; top: 80px; display: flex; flex-direction: column; gap: 12px; z-index: 3500; }
+        .side-btn { width: 45px; height: 45px; border-radius: 50%; border: 2px solid white; color: white; font-size: 0.7rem; display: flex; align-items: center; justify-content: center; opacity: 0.4; transition: 0.3s; background: rgba(0,0,0,0.5); }
+        .side-btn.active { opacity: 1; transform: scale(1.1); box-shadow: 0 0 15px var(--seiryu-blue); border-color: var(--seiryu-blue); }
 
-        /* --- Nodes (鱗と顔) --- */
         .node { position: absolute; transform: translate(-50%, -50%); transition: 0.4s; }
-        .node--person { width: 50px; height: 50px; border-radius: 50%; border: 3px solid var(--person); overflow: hidden; background: white; }
+        .node--person { width: 50px; height: 50px; border-radius: 50%; border: 3px solid var(--person); overflow: hidden; background: white; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
         .node--person img { width: 100%; height: 100%; object-fit: cover; }
         .node--scale { width: 44px; height: 48px; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; }
 
-        /* --- Table (横並び強制) --- */
+        /* --- Table (横並び) --- */
         .table-flex { display: flex; height: 100%; padding: 70px 10px 10px; gap: 10px; }
-        .table-col { flex: 1; background: rgba(255,255,255,0.7); border-radius: 15px; padding: 10px; overflow-y: auto; }
+        .table-col { flex: 1; background: rgba(255,255,255,0.7); border-radius: 15px; padding: 10px; overflow-y: auto; box-shadow: inset 0 0 10px rgba(0,0,0,0.05); }
 
-        /* --- Input Modal (写真スペース付) --- */
-        #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 8000; display: none; align-items: center; justify-content: center; }
-        .modal-inner { width: 90%; background: white; border-radius: 20px; padding: 20px; }
-        .photo-space { width: 100%; height: 120px; border: 2px dashed #ccc; border-radius: 10px; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; flex-direction: column; font-size: 0.7rem; color: #999; }
+        /* --- Input Modal (写真枠あり) --- */
+        #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 8000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        .modal-inner { width: 90%; max-width: 400px; background: white; border-radius: 25px; padding: 20px; }
+        .photo-space { width: 100%; height: 100px; border: 2px dashed #ccc; border-radius: 10px; margin-bottom: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #999; font-size: 0.7rem; }
 
-        /* --- KUKAI (修正版) --- */
-        #ryuo-view { background: #000; flex-direction: column; }
-        .chat-container { height: calc(100% - 140px); padding: 80px 20px 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+        /* --- KUKAI (Map戻る付) --- */
+        #ryuo-view { background: radial-gradient(circle at center, #001a33 0%, #000 100%); flex-direction: column; }
+        .chat-container { height: calc(100% - 150px); padding: 80px 20px 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
         .kukai-footer { position: fixed; bottom: 90px; width: 92%; left: 4%; background: rgba(0,40,80,0.9); border: 1px solid var(--seiryu-blue); border-radius: 30px; display: flex; padding: 5px; z-index: 4500; }
-        #kukai-input { flex: 1; background: none; border: none; color: white; padding: 10px; font-size: 1rem; outline: none; }
+        #kukai-input { flex: 1; background: none; border: none; color: white; padding: 10px 15px; outline: none; font-size: 1rem; }
 
-        /* --- Brave Gate (復旧) --- */
+        /* --- Brave Gate --- */
         #gate-view { position: fixed; inset: 0; z-index: 9000; display: none; background: #000; }
         #webcam { width: 100%; height: 100%; object-fit: cover; }
         #particle-canvas { position: absolute; inset: 0; pointer-events: none; }
 
-        /* --- Footer --- */
+        /* --- Common Footer Nav --- */
         nav { position: fixed; bottom: 0; width: 100%; height: var(--nav-h); background: var(--deep-blue); display: flex; align-items: center; z-index: 5000; padding-bottom: 15px; }
         .nav-btn { flex: 1; color: white; border: none; background: none; display: flex; flex-direction: column; align-items: center; font-size: 0.6rem; opacity: 0.4; }
         .nav-btn.active { opacity: 1; color: var(--seiryu-blue); }
+        #fab { position: fixed; bottom: 95px; right: 20px; width: 60px; height: 60px; background: var(--seiryu-blue); border-radius: 50%; font-size: 30px; z-index: 4000; box-shadow: 0 5px 15px rgba(0,0,0,0.3); border:none; display: flex; align-items: center; justify-content: center; }
     </style>
 </head>
 <body>
 
-    <div id="setup-layer" onclick="initApp()"><div><div style="font-size:50px;">🐲</div><p>ENE-LOG 起動</p></div></div>
+    <div id="setup-layer" onclick="initApp()"><div><div style="font-size:50px; margin-bottom:20px;">🐲</div><p>ENE-LOG を再起動する</p></div></div>
 
     <div id="home-view" class="view active">
         <div class="layer-side-nav">
@@ -81,29 +81,31 @@
     </div>
 
     <div id="ryuo-view" class="view">
-        <button onclick="goMap()" style="position:fixed; top:75px; left:15px; z-index:5000; background:var(--seiryu-blue); border:none; padding:5px 15px; border-radius:15px; font-size:0.7rem; font-weight:bold;">🏠 Map戻る</button>
-        <div class="chat-container" id="chat-box"></div>
+        <button onclick="goMap()" style="position:fixed; top:75px; left:15px; z-index:5000; background:rgba(0,229,255,0.2); border:1px solid var(--seiryu-blue); color:white; padding:5px 15px; border-radius:15px; font-size:0.7rem;">🏠 Mapに戻る</button>
+        <div class="chat-container" id="chat-box">
+            <div style="background:rgba(255,255,255,0.1); padding:15px; border-radius:15px; font-size:0.85rem; border-left:3px solid var(--seiryu-blue);">やあ。君の問いが新しい波紋になるよ。</div>
+        </div>
         <div class="kukai-footer">
-            <button onclick="drawLucky()" style="background:none; border:none; color:var(--seiryu-blue); padding:0 10px;">占</button>
-            <input type="text" id="kukai-input" placeholder="問いを記入..." onkeypress="if(event.key==='Enter') sendKukai()">
-            <button onclick="sendKukai()" style="background:var(--seiryu-blue); border:none; width:40px; height:40px; border-radius:50%;">問</button>
+            <button onclick="drawLucky()" style="background:none; border:none; color:var(--seiryu-blue); padding:0 15px;">占</button>
+            <input type="text" id="kukai-input" placeholder="問いを投げる..." onkeypress="if(event.key==='Enter') sendKukai()">
+            <button onclick="sendKukai()" style="background:var(--seiryu-blue); border:none; width:40px; height:40px; border-radius:50%; font-weight:bold;">問</button>
         </div>
     </div>
 
     <div id="gate-view">
         <video id="webcam" autoplay playsinline muted></video>
         <canvas id="particle-canvas"></canvas>
-        <button onclick="exitGate()" style="position:absolute; top:30px; left:20px; background:rgba(0,0,0,0.5); color:white; border:1px solid var(--seiryu-blue); padding:10px 20px; border-radius:20px;">↩ Map戻る</button>
+        <button onclick="exitGate()" style="position:absolute; top:30px; left:20px; background:rgba(0,0,0,0.5); color:white; border:1px solid var(--seiryu-blue); padding:10px 20px; border-radius:20px;">↩ Mapに戻る</button>
         <div id="kanji-output" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:80px; color:white; text-shadow:0 0 20px var(--seiryu-blue);"></div>
         <div style="position:absolute; bottom:50px; left:50%; transform:translateX(-50%); width:80px; height:80px; border-radius:50%; border:5px solid white;" onclick="observe()"></div>
     </div>
 
     <div id="modal">
         <div class="modal-inner">
-            <div class="photo-space" onclick="alert('カメラ起動')">📷 写真を貼り付け</div>
+            <div class="photo-space" onclick="alert('カメラ起動（シミュレーション）')">📸 写真を貼り付け</div>
             <input type="text" id="in-title" placeholder="タイトル">
             <textarea id="in-desc" placeholder="詳細"></textarea>
-            <button onclick="saveItem()" style="width:100%; padding:15px; background:var(--deep-blue); color:white; border-radius:30px;">テーブルへ置く</button>
+            <button onclick="saveItem()" style="width:100%; padding:15px; background:var(--deep-blue); color:white; border-radius:30px; border:none;">テーブルへ置く</button>
             <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; margin-top:10px; border:none; background:none; color:#999;">閉じる</button>
         </div>
     </div>
@@ -115,13 +117,14 @@
         <button class="nav-btn" onclick="enterGate()">⛩<span>Gate</span></button>
     </nav>
 
-    <button id="fab" style="position:fixed; bottom:95px; right:20px; width:60px; height:60px; background:var(--seiryu-blue); border-radius:50%; font-size:30px; z-index:4000;" onclick="document.getElementById('modal').style.display='flex'">＋</button>
+    <button id="fab" onclick="document.getElementById('modal').style.display='flex'">＋</button>
 
 <script>
     let audioCtx, activeL=['person','agri','skill','space'];
     let db = [
         { type:'person', icon:'👤', title:'茂谷 幸弘', x:25, y:35, mode:'give', img:'https://i.pravatar.cc/150?u=shigetani' },
-        { type:'agri', icon:'🌱', title:'納豆菌実験', x:60, y:50, mode:'want' }
+        { type:'agri', icon:'🌱', title:'納豆菌実験', x:60, y:50, mode:'give' },
+        { type:'skill', icon:'💡', title:'AR観測技術', x:40, y:20, mode:'want' }
     ];
 
     function initApp() { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); document.getElementById('setup-layer').style.display='none'; render(); }
@@ -132,6 +135,7 @@
         document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
         if(btn) btn.classList.add('active');
         document.getElementById('fab').style.display = (id==='home-view' || id==='table-view') ? 'block' : 'none';
+        render();
     }
 
     function goMap() { switchView('home-view', document.querySelectorAll('.nav-btn')[0]); }
@@ -143,8 +147,10 @@
 
     async function enterGate() {
         document.getElementById('gate-view').style.display='block';
-        const s = await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
-        document.getElementById('webcam').srcObject = s;
+        try {
+            const s = await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
+            document.getElementById('webcam').srcObject = s;
+        } catch(e) { alert("カメラが使えません"); }
     }
 
     function exitGate() {
@@ -155,6 +161,9 @@
 
     function render() {
         const m = document.getElementById('map-area'); m.innerHTML = '';
+        const listG = document.getElementById('list-give'); listG.innerHTML = '';
+        const listW = document.getElementById('list-want'); listW.innerHTML = '';
+
         db.filter(i=>activeL.includes(i.type)).forEach(i=>{
             const n = document.createElement('div');
             if(i.type==='person'){
@@ -163,14 +172,20 @@
                 n.className='node node--scale'; n.style.background=`var(--${i.type})`; n.innerText=i.icon;
             }
             n.style.top=i.y+'%'; n.style.left=i.x+'%'; m.appendChild(n);
+
+            const card = document.createElement('div');
+            card.style.background='white'; card.style.padding='10px'; card.style.borderRadius='10px'; card.style.marginBottom='10px'; card.style.fontSize='0.7rem';
+            card.innerHTML = `<strong>${i.icon} ${i.title}</strong>`;
+            if(i.mode==='give') listG.appendChild(card); else listW.appendChild(card);
         });
     }
 
     function sendKukai() {
         const i=document.getElementById('kukai-input'), t=i.value; if(!t)return;
         const b=document.getElementById('chat-box');
-        b.innerHTML+=`<div class="bubble-user">${t}</div>`; i.value='';
-        setTimeout(()=> { b.innerHTML+=`<div class="bubble-ryuo">君の問いが、新しい波紋を広げたよ。</div>`; b.scrollTop=b.scrollHeight; }, 1000);
+        b.innerHTML+=`<div style="align-self:flex-end; background:var(--seiryu-blue); color:var(--deep-blue); padding:10px; border-radius:15px; font-weight:bold; font-size:0.85rem;">${t}</div>`;
+        i.value='';
+        setTimeout(()=> { b.innerHTML+=`<div style="background:rgba(255,255,255,0.1); padding:15px; border-radius:15px; font-size:0.85rem; border-left:3px solid var(--seiryu-blue); margin-top:10px;">君が動けば、龍も動く。その問い、面白いね。</div>`; b.scrollTop=b.scrollHeight; }, 1000);
     }
 </script>
 </body>
