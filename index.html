@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ENE-LOG - KUKAI Fixed</title>
+    <title>ENE-LOG - KUKAI Lucky Energy</title>
     <style>
         :root {
             --seiryu-blue: #00e5ff;
             --deep-blue: #001a33;
             --header-height: 70px;
+            --person: #e91e63; --agri: #4CAF50; --skill: #673AB7; --space: #FF9800;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -18,32 +19,29 @@
         #quantum-canvas { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
         #ripple-layer { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
 
-        header { 
-            height: var(--header-height); display: flex; align-items: flex-end; justify-content: space-between; 
-            padding: 10px 20px; z-index: 100; backdrop-filter: blur(15px); background: rgba(0,0,0,0.5);
-        }
+        header { height: var(--header-height); display: flex; align-items: flex-end; justify-content: space-between; padding: 10px 20px; z-index: 100; backdrop-filter: blur(15px); background: rgba(0,0,0,0.5); }
         .back-btn { background: none; border: 1px solid var(--seiryu-blue); color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.8rem; }
-        .archive-btn { color: var(--seiryu-blue); font-size: 0.8rem; border: 1px solid var(--seiryu-blue); padding: 5px 15px; border-radius: 20px; background: none; }
+        
+        /* ラッキーエナジー表示 */
+        #lucky-display { 
+            position: absolute; top: 90px; right: 20px; z-index: 100;
+            text-align: center; opacity: 0; transition: 1s; 
+        }
+        .energy-circle { width: 50px; height: 50px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; box-shadow: 0 0 15px var(--seiryu-blue); }
 
         /* --- Chat Area --- */
-        .chat-container { 
-            flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; 
-            z-index: 10; scroll-behavior: smooth; padding-bottom: 180px; /* ここを大きく開けました */
-        }
-        .bubble-ryuo { align-self: flex-start; max-width: 85%; background: rgba(255,255,255,0.1); border-radius: 20px 20px 20px 0; padding: 15px; font-size: 0.9rem; line-height: 1.6; border: 1px solid rgba(0,229,255,0.3); }
-        .bubble-user { align-self: flex-end; max-width: 80%; background: var(--seiryu-blue); color: var(--deep-blue); border-radius: 20px 20px 0 20px; padding: 12px; font-size: 0.9rem; font-weight: bold; }
+        .chat-container { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; z-index: 10; scroll-behavior: smooth; padding-bottom: 180px; }
+        .bubble-ryuo { align-self: flex-start; max-width: 85%; background: rgba(255,255,255,0.1); border-radius: 20px 20px 20px 0; padding: 15px; font-size: 0.85rem; line-height: 1.6; border: 1px solid rgba(0,229,255,0.3); }
+        .bubble-user { align-self: flex-end; max-width: 80%; background: var(--seiryu-blue); color: var(--deep-blue); border-radius: 20px 20px 0 20px; padding: 12px; font-size: 0.85rem; font-weight: bold; }
 
-        /* --- Input Area (iPhone対応強化版) --- */
+        /* --- Input Area --- */
         .chat-input-wrapper { 
-            position: fixed; 
-            bottom: 80px; /* iPhoneのバーを完全に避ける位置 */
-            width: 90%; left: 5%;
-            background: rgba(0, 40, 80, 0.95); 
-            padding: 8px; display: flex; gap: 8px; z-index: 2000; 
+            position: fixed; bottom: 85px; width: 90%; left: 5%;
+            background: rgba(0, 40, 80, 0.95); padding: 8px; display: flex; gap: 8px; z-index: 2000; 
             border: 2px solid var(--seiryu-blue); border-radius: 40px;
-            box-shadow: 0 0 25px rgba(0,229,255,0.4);
         }
         #chat-input { flex: 1; background: transparent; border: none; padding: 12px 20px; color: white; outline: none; font-size: 1rem; }
+        .lucky-btn { background: none; border: 1px solid var(--seiryu-blue); color: var(--seiryu-blue); width: 45px; height: 45px; border-radius: 50%; font-size: 0.7rem; font-weight: bold; }
         .send-btn { background: var(--seiryu-blue); color: var(--deep-blue); border: none; width: 45px; height: 45px; border-radius: 50%; font-weight: bold; }
 
         .ripple { position: absolute; border: 2px solid var(--seiryu-blue); border-radius: 50%; transform: translate(-50%, -50%); animation: ripple-out 1.2s ease-out forwards; opacity: 0; }
@@ -55,8 +53,13 @@
     <header>
         <button class="back-btn" onclick="history.back()">↩️ Map</button>
         <div style="font-weight:bold; letter-spacing: 2px;">KUKAI</div>
-        <button class="archive-btn" onclick="alert('これまでの対話は心の中に…（実装準備中）')">📜 記録</button>
+        <div style="width: 60px;"></div>
     </header>
+
+    <div id="lucky-display">
+        <div class="energy-circle" id="energy-icon">✨</div>
+        <div style="font-size: 0.5rem; margin-top: 4px; color: var(--seiryu-blue);">Lucky Energy</div>
+    </div>
 
     <div id="ryuo-view">
         <canvas id="quantum-canvas"></canvas>
@@ -64,31 +67,37 @@
 
         <div class="chat-container" id="chat-box">
             <div class="bubble-ryuo">
-                おかえり。心に浮かんだ「問い」を投げてごらん。<br>
-                君の言葉が、新しい現実を作る一滴（ひとしずく）になるよ。
+                やあ、観測者の君。<br>
+                左下の「占」ボタンで、今の君の波動とシンクロするエネルギーを占ってみるかい？
             </div>
         </div>
         
         <div class="chat-input-wrapper">
-            <input type="text" id="chat-input" placeholder="KUKAIに問いかける..." onkeypress="if(event.key==='Enter') sendMessage()">
+            <button class="lucky-btn" onclick="drawLucky()">占</button>
+            <input type="text" id="chat-input" placeholder="問いを投げる..." onkeypress="if(event.key==='Enter') sendMessage()">
             <button class="send-btn" onclick="sendMessage()">問</button>
         </div>
     </div>
 
 <script>
     let audioCtx;
-    function playPichan() {
+    const energies = [
+        { n: '人', i: '👤', c: 'var(--person)' },
+        { n: '農', i: '🌱', c: 'var(--agri)' },
+        { n: '智慧', i: '💡', c: 'var(--skill)' },
+        { n: '場', i: '🏠', c: 'var(--space)' }
+    ];
+
+    function playSound(freq, dur) {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         const now = audioCtx.currentTime;
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(1100, now);
-        osc.frequency.exponentialRampToValueAtTime(1700, now + 0.05);
-        gain.gain.setValueAtTime(0.4, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+        osc.frequency.setValueAtTime(freq, now);
+        osc.frequency.exponentialRampToValueAtTime(freq*1.5, now + dur);
+        gain.gain.setValueAtTime(0.3, now); gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
         osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(); osc.stop(now + 0.8);
+        osc.start(); osc.stop(now + dur);
     }
 
     const canvas = document.getElementById('quantum-canvas');
@@ -99,31 +108,38 @@
 
     class Particle {
         constructor() { this.x = Math.random()*canvas.width; this.y = Math.random()*canvas.height; this.s = Math.random()*1.5; }
-        update() { this.y -= 0.3; if(this.y < 0) this.y = canvas.height; }
+        update() { this.y -= 0.5; if(this.y < 0) this.y = canvas.height; }
         draw() { ctx.beginPath(); ctx.arc(this.x, this.y, this.s, 0, Math.PI*2); ctx.fillStyle = "rgba(0, 229, 255, 0.3)"; ctx.fill(); }
     }
-    const particles = Array.from({length:30}, () => new Particle());
+    let particles = Array.from({length:40}, () => new Particle());
     function animate() { ctx.clearRect(0,0,canvas.width,canvas.height); particles.forEach(p=>{p.update(); p.draw();}); requestAnimationFrame(animate); }
     animate();
+
+    function drawLucky() {
+        playSound(440, 0.5);
+        const res = energies[Math.floor(Math.random()*energies.length)];
+        const display = document.getElementById('lucky-display');
+        const icon = document.getElementById('energy-icon');
+        
+        display.style.opacity = '0';
+        setTimeout(() => {
+            icon.innerText = res.i;
+            icon.style.backgroundColor = res.c;
+            display.style.opacity = '1';
+            addBubble(`今の君は「${res.n}」のエネルギーと強く響き合っているみたい。${res.n}を意識して動くと、いいアハ体験に出会えるかもね！`, 'ryuo');
+        }, 500);
+    }
 
     function sendMessage() {
         const input = document.getElementById('chat-input');
         const text = input.value.trim();
         if (!text) return;
-
-        playPichan();
-        const layer = document.getElementById('ripple-layer');
-        const ripple = document.createElement('div');
-        ripple.className = 'ripple'; ripple.style.top = '50%'; ripple.style.left = '50%';
-        layer.appendChild(ripple);
-        setTimeout(() => ripple.remove(), 1200);
-
+        playSound(1100, 0.8);
         addBubble(text, 'user');
         input.value = '';
-
         setTimeout(() => {
-            addBubble("その問いかけ、とても素敵な響きだね。君が意識を向けることで、未来の可能性が一つに絞り込まれていくんだ。", 'ryuo');
-        }, 1300);
+            addBubble("その問いかけ、すごくワクワクする響きだね。君が意識を向けることで、未来の可能性が一つに絞り込まれていくんだ。", 'ryuo');
+        }, 1200);
     }
 
     function addBubble(text, type) {
