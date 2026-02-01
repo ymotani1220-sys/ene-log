@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ENE-LOG - Pure Origin & Auto Reset</title>
+    <title>ENE-LOG - The Perfect Harmony</title>
     <style>
         :root {
             --seiryu-blue: #00e5ff; --deep-blue: #001a33;
@@ -40,7 +40,7 @@
         .item-card { background: white; border-radius: 10px; padding: 10px; margin-bottom: 8px; border-left: 4px solid #ccc; font-size: 0.7rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .item-card img { width: 100%; border-radius: 5px; margin-top: 5px; display: block; }
 
-        /* --- KUKAI (Ryuo View) --- */
+        /* --- Ryuo View (KUKAI Dialogue) --- */
         #ryuo-view { background: radial-gradient(circle at 50% 100%, #002b55 0%, #000 100%); overflow: hidden; display: flex; flex-direction: column; }
         .chat-box { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; padding-bottom: 120px; }
         .bubble-kukai { align-self: flex-start; max-width: 85%; background: rgba(255,255,255,0.1); border: 1px solid rgba(0,229,255,0.3); border-radius: 20px 20px 20px 0; padding: 12px; font-size: 0.85rem; color: white; line-height: 1.6; }
@@ -49,23 +49,16 @@
         #kukai-field { flex: 1; background: transparent; border: none; color: white; padding: 10px 15px; outline: none; font-size: 1rem; }
         .kukai-btn { background: var(--seiryu-blue); color: var(--deep-blue); border: none; width: 42px; height: 42px; border-radius: 50%; font-weight: bold; cursor: pointer; }
 
-        /* --- Brave Gate (AR) --- */
+        /* --- Archive Overlay --- */
+        #archive-overlay { position: fixed; inset: 0; background: rgba(0,26,51,0.98); z-index: 9000; display: none; flex-direction: column; padding: 80px 20px 20px; }
+        .archive-item { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 12px; margin-bottom: 10px; border-left: 3px solid var(--seiryu-blue); font-size: 0.7rem; color: white; }
+
+        /* --- Brave Gate --- */
         #gate-view { background: #000; position: fixed; inset: 0; z-index: 5000; display: none; }
         video { width: 100%; height: 100%; object-fit: cover; }
         #particle-canvas { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
-        
-        /* 漢字演出：フェードアウト用のトランジションを追加 */
-        .kanji-word { 
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-            font-size: 100px; color: white; text-shadow: 0 0 20px var(--seiryu-blue); 
-            opacity: 0; z-index: 10; pointer-events: none;
-            transition: opacity 0.8s ease-out; 
-        }
-        @keyframes kanjiResonance {
-            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
-            20% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
-            100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-        }
+        .kanji-word { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 100px; color: white; text-shadow: 0 0 20px var(--seiryu-blue); opacity: 0; z-index: 10; pointer-events: none; transition: opacity 0.8s ease-out; }
+        @keyframes kanjiResonance { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); } 20% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); } 100% { opacity: 1; } }
 
         /* --- Shared UI --- */
         nav { position: fixed; bottom: 0; width: 100%; height: var(--nav-height); background: var(--deep-blue); display: flex; align-items: center; z-index: 4000; padding-bottom: 10px; }
@@ -76,14 +69,6 @@
         
         #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 8000; backdrop-filter: blur(8px); }
         .modal-inner { width: 90%; max-width: 400px; background: white; border-radius: 25px; padding: 20px; max-height: 90vh; overflow-y: auto; }
-        .mode-switch { display: flex; background: #eee; border-radius: 20px; margin-bottom: 15px; padding: 3px; }
-        .mode-btn { flex: 1; border: none; padding: 8px; border-radius: 18px; font-size: 0.75rem; font-weight: bold; background: none; color: #666; }
-        .mode-btn.active { background: white; color: var(--deep-blue); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .sphere-sel { display: flex; justify-content: space-around; margin-bottom: 15px; }
-        .sphere-btn { width: 42px; height: 42px; border-radius: 50%; border: 2px solid transparent; color: white; font-size: 0.6rem; opacity: 0.3; }
-        .sphere-btn.selected { opacity: 1; border-color: #333; transform: scale(1.1); }
-        .photo-upload { width: 100%; height: 80px; border: 2px dashed #ccc; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #999; margin-bottom: 15px; font-size: 0.7rem; position: relative; overflow: hidden; }
-        #photo-preview { position: absolute; width: 100%; height: 100%; object-fit: cover; display: none; }
         input, textarea { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #ddd; margin-bottom: 10px; font-size: 0.9rem; }
     </style>
 </head>
@@ -95,22 +80,7 @@
 
     <div id="modal">
         <div class="modal-inner">
-            <h3 style="text-align:center; font-size:0.9rem; margin-bottom:15px;">新しい共鳴を記録する</h3>
-            <div class="mode-switch">
-                <button id="mode-give" onclick="setMode('give')" class="mode-btn active">🥘 持ち寄り</button>
-                <button id="mode-want" onclick="setMode('want')" class="mode-btn">🍽 リクエスト</button>
-            </div>
-            <div class="sphere-sel">
-                <button id="s-person" onclick="setSphere('person','👤')" class="sphere-btn selected" style="background:var(--person);">人</button>
-                <button id="s-agri" onclick="setSphere('agri','🌱')" class="sphere-btn" style="background:var(--agri);">農</button>
-                <button id="s-skill" onclick="setSphere('skill','💡')" class="sphere-btn" style="background:var(--skill);">智慧</button>
-                <button id="s-space" onclick="setSphere('space','🏠')" class="sphere-btn" style="background:var(--space);">場</button>
-            </div>
-            <div class="photo-upload" onclick="document.getElementById('photo-input').click()">
-                <span id="upload-label">📸 写真を追加する</span>
-                <input type="file" id="photo-input" accept="image/*" style="display:none" onchange="previewPhoto(this)">
-                <img id="photo-preview">
-            </div>
+            <h3 style="text-align:center; font-size:0.9rem; margin-bottom:15px;">共鳴を記録する</h3>
             <input type="text" id="m-title" placeholder="タイトル">
             <textarea id="m-desc" rows="2" placeholder="詳細や想い"></textarea>
             <button onclick="saveData()" style="width:100%; padding:15px; background:var(--deep-blue); color:white; border:none; border-radius:30px; font-weight:bold;">テーブルへ置く</button>
@@ -132,20 +102,29 @@
     
     <div id="table-view" class="view">
         <div class="table-container">
-            <div class="table-col"><div style="font-size:0.7rem; font-weight:bold; border-bottom:1px solid #ddd; padding-bottom:5px;">🥘 持ち寄り</div><div id="off-list"></div></div>
-            <div class="table-col"><div style="font-size:0.7rem; font-weight:bold; border-bottom:1px solid #ddd; padding-bottom:5px;">🍽 リクエスト</div><div id="req-list"></div></div>
+            <div class="table-col"><strong>🥘 持ち寄り</strong><div id="off-list"></div></div>
+            <div class="table-col"><strong>🍽 リクエスト</strong><div id="req-list"></div></div>
         </div>
     </div>
 
     <div id="ryuo-view" class="view">
+        <div style="position:absolute; top:15px; right:15px; z-index:10;">
+            <button onclick="toggleArchive()" style="background:none; border:1px solid var(--seiryu-blue); color:var(--seiryu-blue); padding:4px 10px; border-radius:15px; font-size:0.6rem; cursor:pointer;">📜 記録</button>
+        </div>
         <div class="chat-box" id="kukai-chat">
-            <div class="bubble-kukai">やあ、観測者の君。今日はどんなアハ体験があったかな？<br>言葉にすることで、君の周りのエネルギーが形になっていくよ。</div>
+            <div class="bubble-kukai">やあ、観測者の君。今日はどんなアハ体験があったかな？</div>
         </div>
         <div class="kukai-input-wrapper">
             <button onclick="drawLucky()" style="background:none; border:none; color:var(--seiryu-blue); padding:0 10px; font-size:0.7rem; font-weight:bold;">占</button>
             <input type="text" id="kukai-field" placeholder="KUKAIに問いかける..." onkeypress="if(event.key==='Enter') sendKukai()">
             <button class="kukai-btn" onclick="sendKukai()">問</button>
         </div>
+    </div>
+
+    <div id="archive-overlay">
+        <h3 style="color:var(--seiryu-blue); text-align:center; margin-bottom:20px;">智慧の記録</h3>
+        <div id="arch-list" style="flex:1; overflow-y:auto;"></div>
+        <button onclick="toggleArchive()" style="margin-top:20px; background:var(--seiryu-blue); border:none; color:var(--deep-blue); width:100%; padding:15px; border-radius:30px; font-weight:bold;">閉じる</button>
     </div>
 
     <div id="gate-view">
@@ -161,29 +140,21 @@
     <nav id="main-nav">
         <button class="nav-btn active" id="map-nav-btn" onclick="switchView('home-view', this)">🗺<span>Map</span></button>
         <button class="nav-btn" onclick="switchView('table-view', this)">🥘<span>Table</span></button>
-        <button class="nav-btn" onclick="switchView('ryuo-view', this)">🐲<span>龍王</span></button>
+        <button class="nav-btn" onclick="switchView('ryuo-view', this)">🐲<span>KUKAI</span></button>
         <button class="nav-btn" onclick="enterGate()">⛩<span>Gate</span></button>
     </nav>
 
 <script>
-    let audioCtx, isObserving = false, mCat = 'person', mIcon = '👤', mMode = 'give', mImg = null, activeLayers = ['person', 'agri', 'skill', 'space'];
+    let audioCtx, isObserving = false, activeLayers = ['person', 'agri', 'skill', 'space'], historyData = [];
     let db = [
-        { type:'person', icon:'👤', title:'茂谷 幸弘', x:25, y:35, mode:'give', img:'https://i.pravatar.cc/150?u=shige', desc:'Table案内人' },
-        { type:'agri', icon:'🌱', title:'納豆菌実験', x:60, y:50, mode:'want', desc:'協力求む' }
+        { type:'person', icon:'👤', title:'茂谷 幸弘', x:25, y:35, mode:'give', img:'https://i.pravatar.cc/150?u=shige' },
+        { type:'agri', icon:'🌱', title:'納豆菌実験', x:60, y:50, mode:'want' }
     ];
 
     function initApp() {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         document.getElementById('setup-layer').style.display = 'none';
         render();
-    }
-
-    function playPichan() {
-        if(!audioCtx) return;
-        const n = audioCtx.currentTime, o = audioCtx.createOscillator(), g = audioCtx.createGain();
-        o.type = 'sine'; o.frequency.setValueAtTime(1100, n); o.frequency.exponentialRampToValueAtTime(1700, n+0.05);
-        g.gain.setValueAtTime(0.4, n); g.gain.exponentialRampToValueAtTime(0.001, n+0.8);
-        o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(n+0.8);
     }
 
     function switchView(id, btn) {
@@ -194,17 +165,38 @@
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         document.getElementById('main-fab').style.display = (id === 'ryuo-view') ? 'none' : 'flex';
-        if(id === 'home-view' || id === 'table-view') render();
+        render();
     }
 
-    // --- Modal Logic ---
-    function openModal() { document.getElementById('modal').style.display = 'flex'; }
-    function closeModal() { document.getElementById('modal').style.display = 'none'; mImg = null; document.getElementById('photo-preview').style.display = 'none'; document.getElementById('upload-label').style.display = 'block'; }
-    function setMode(m) { mMode = m; document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active')); document.getElementById('mode-'+m).classList.add('active'); }
-    function setSphere(c, i) { mCat = c; mIcon = i; document.querySelectorAll('.sphere-btn').forEach(b => b.classList.remove('selected')); document.getElementById('s-'+c).classList.add('selected'); }
-    function previewPhoto(i) { if (i.files && i.files[0]) { const r = new FileReader(); r.onload = e => { mImg = e.target.result; const p = document.getElementById('photo-preview'); p.src = mImg; p.style.display = 'block'; document.getElementById('upload-label').style.display = 'none'; }; r.readAsDataURL(i.files[0]); } }
-    function saveData() { const t = document.getElementById('m-title').value; if(!t) return alert("タイトルを入力してください"); db.unshift({ type:mCat, icon:mIcon, title:t, desc:document.getElementById('m-desc').value, mode:mMode, img:mImg, x:20+Math.random()*60, y:20+Math.random()*60 }); document.getElementById('m-title').value=''; document.getElementById('m-desc').value=''; closeModal(); render(); }
-    function toggleLayer(t, b) { if(activeLayers.includes(t)) activeLayers = activeLayers.filter(l=>l!==t); else activeLayers.push(t); b.classList.toggle('active'); render(); }
+    function toggleArchive() {
+        const o = document.getElementById('archive-overlay');
+        o.style.display = (o.style.display === 'flex') ? 'none' : 'flex';
+        document.getElementById('arch-list').innerHTML = historyData.map(h => `<div class="archive-item">問: ${h.q}<br>答: ${h.a}</div>`).join('');
+    }
+
+    function sendKukai() {
+        const f = document.getElementById('kukai-field'), t = f.value.trim(); if(!t) return;
+        addChat(t, 'user'); f.value = '';
+        setTimeout(() => { 
+            const ans = "その問いかけ、すごくワクワクするね！";
+            addChat(ans, 'kukai'); historyData.unshift({q:t, a:ans});
+        }, 1000);
+    }
+    function addChat(t, type) {
+        const box = document.getElementById('kukai-chat'); const d = document.createElement('div');
+        d.className = type === 'user' ? 'bubble-user' : 'bubble-kukai'; d.innerText = t; box.appendChild(d); box.scrollTop = box.scrollHeight;
+    }
+
+    function observe() {
+        if(isObserving) return; isObserving = true;
+        for(let i=0; i<80; i++) setTimeout(() => { particles.push(new Particle(i*0.2, 3+Math.random()*2)); if(i===0) animate(); }, i*8);
+        const k = document.getElementById('kanji-output'); k.innerText = ["龍", "響", "生", "耕", "結"][Math.floor(Math.random()*5)];
+        k.style.animation = 'kanjiResonance 1s forwards'; k.style.opacity = '1';
+        setTimeout(() => { 
+            k.style.opacity = '0'; 
+            setTimeout(() => { k.innerText = ""; isObserving = false; }, 800);
+        }, 1200);
+    }
 
     function render() {
         const m = document.getElementById('map-area'); m.innerHTML = '';
@@ -212,64 +204,22 @@
         const r = document.getElementById('req-list'); r.innerHTML = '';
         db.filter(i => activeLayers.includes(i.type)).forEach(i => {
             const el = document.createElement('div');
-            el.className = (i.type === 'person' && i.img) ? 'node node--person' : `node node--scale node--${i.type}`;
-            if(i.type === 'person' && i.img) el.style.backgroundImage = `url('${i.img}')`; else el.innerHTML = i.icon;
+            el.className = (i.type === 'person') ? 'node node--person' : `node node--scale node--${i.type}`;
+            if(i.type === 'person') el.style.backgroundImage = `url('${i.img}')`; else el.innerHTML = i.icon;
             el.style.top = i.y + '%'; el.style.left = i.x + '%'; m.appendChild(el);
-            const card = document.createElement('div'); card.className = 'item-card'; card.style.borderLeftColor = `var(--${i.type})`;
-            card.innerHTML = `<strong>${i.icon} ${i.title}</strong><br>${i.desc || ''}${i.img ? `<img src="${i.img}">` : ''}`;
+            const card = document.createElement('div'); card.className = 'item-card'; card.innerHTML = `<strong>${i.icon} ${i.title}</strong>`;
             if(i.mode === 'give') o.appendChild(card); else r.appendChild(card);
         });
     }
 
-    // --- KUKAI Dialogue ---
-    function sendKukai() {
-        const field = document.getElementById('kukai-field'); const text = field.value.trim(); if(!text) return;
-        playPichan(); addChat(text, 'user'); field.value = '';
-        setTimeout(() => { addChat("その問いかけ、すごくワクワクするね！目に見えないエネルギーが形になろうとしているよ。", 'kukai'); }, 1200);
-    }
-    function addChat(t, type) {
-        const box = document.getElementById('kukai-chat'); const d = document.createElement('div');
-        d.className = type === 'user' ? 'bubble-user' : 'bubble-kukai'; d.innerText = t; box.appendChild(d); box.scrollTop = box.scrollHeight;
-    }
-    function drawLucky() { playPichan(); addChat("今日の君のラッキーエナジーは…「"+['人 👤','農 🌱','智慧 💡','場 🏠'][Math.floor(Math.random()*4)]+"」だよ！", 'kukai'); }
-
-    // --- AR / Gate Logic (オートフェード & リセット実装) ---
-    async function enterGate() {
-        document.getElementById('gate-view').style.display = 'block';
-        const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-        document.getElementById('webcam').srcObject = s; 
-        const canvas = document.getElementById('particle-canvas');
-        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-    }
-
-    function observe() {
-        if(isObserving) return;
-        isObserving = true;
-        playPichan();
-
-        // パーティクルアニメーション開始
-        for(let i=0; i<80; i++) setTimeout(() => { particles.push(new Particle(i*0.2, 3+Math.random()*2)); if(i===0) animate(); }, i*8);
-        
-        // 漢字の表示
-        const kOut = document.getElementById('kanji-output');
-        kOut.innerText = ["龍", "響", "生", "耕", "結", "開"][Math.floor(Math.random()*6)];
-        kOut.style.animation = 'kanjiResonance 1s forwards';
-        kOut.style.opacity = '1';
-
-        // 1秒後にスーッと消してリセット
-        setTimeout(() => {
-            kOut.style.opacity = '0'; // フェードアウト開始
-            setTimeout(() => {
-                kOut.innerText = "";
-                kOut.style.animation = 'none';
-                isObserving = false; // 観測可能状態にリセット
-            }, 800); // transition時間(0.8s)待機
-        }, 1200); // 漢字を表示させておく時間
-    }
-
-    const canvas = document.getElementById('particle-canvas'); const ctx = canvas.getContext('2d'); let particles = [];
+    const canvas = document.getElementById('particle-canvas'), ctx = canvas.getContext('2d'); let particles = [];
     class Particle { constructor(a, rs) { this.a = a; this.r = 0; this.rs = rs; this.l = 1.0; } update() { this.a += 0.25; this.r += this.rs; this.l -= 0.015; } draw() { ctx.beginPath(); ctx.arc(canvas.width/2 + Math.cos(this.a)*this.r, canvas.height/2 + Math.sin(this.a)*this.r, 2.5, 0, Math.PI*2); ctx.fillStyle = `hsla(185, 100%, 75%, ${this.l})`; ctx.fill(); } }
     function animate() { ctx.clearRect(0,0,canvas.width,canvas.height); particles = particles.filter(p=>p.l>0); particles.forEach(p=>{ p.update(); p.draw(); }); if(particles.length > 0) requestAnimationFrame(animate); }
+    async function enterGate() { document.getElementById('gate-view').style.display = 'block'; const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } }); document.getElementById('webcam').srcObject = s; canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    function toggleLayer(t, b) { if(activeLayers.includes(t)) activeLayers = activeLayers.filter(l=>l!==t); else activeLayers.push(t); b.classList.toggle('active'); render(); }
+    function openModal() { document.getElementById('modal').style.display = 'flex'; }
+    function closeModal() { document.getElementById('modal').style.display = 'none'; }
+    function saveData() { const t = document.getElementById('m-title').value; if(!t) return alert("入力してね"); db.unshift({ type:'person', icon:'👤', title:t, mode:'give', x:20+Math.random()*60, y:20+Math.random()*60 }); closeModal(); render(); }
 </script>
 </body>
 </html>
