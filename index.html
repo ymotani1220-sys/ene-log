@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ENE-LOG - Ryuo Resonance</title>
+    <title>ENE-LOG - KUKAI Ripple</title>
     <style>
         :root {
             --seiryu-blue: #00e5ff;
@@ -17,52 +17,57 @@
         #ryuo-view { height: 100vh; display: flex; flex-direction: column; position: relative; background: radial-gradient(circle at 50% 100%, #003366 0%, #000 100%); }
         #quantum-canvas { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
 
+        /* 波紋エフェクト用レイヤー */
+        #ripple-layer { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+        .ripple {
+            position: absolute; border: 2px solid var(--seiryu-blue);
+            border-radius: 50%; transform: translate(-50%, -50%);
+            animation: ripple-out 1.2s ease-out forwards;
+            opacity: 0;
+        }
+        @keyframes ripple-out {
+            0% { width: 0; height: 0; opacity: 0.8; }
+            100% { width: 150vmax; height: 150vmax; opacity: 0; }
+        }
+
         header { height: var(--header-height); display: flex; align-items: center; justify-content: space-between; padding: 0 15px; z-index: 100; backdrop-filter: blur(10px); background: rgba(0,0,0,0.4); }
-        .back-btn { background: rgba(255,255,255,0.1); border: 1px solid var(--seiryu-blue); color: white; padding: 5px 12px; border-radius: 15px; font-size: 0.75rem; cursor: pointer; }
-        .archive-btn { background: none; border: none; color: var(--seiryu-blue); font-size: 0.75rem; text-decoration: underline; cursor: pointer; }
+        .back-btn { background: rgba(255,255,255,0.1); border: 1px solid var(--seiryu-blue); color: white; padding: 6px 15px; border-radius: 20px; font-size: 0.75rem; cursor: pointer; }
 
         /* --- Chat Area --- */
-        .chat-container { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; z-index: 10; scroll-behavior: smooth; padding-bottom: 150px; }
-        .bubble-ryuo { align-self: flex-start; max-width: 85%; background: rgba(255,255,255,0.08); border-radius: 20px 20px 20px 0; padding: 15px; font-size: 0.85rem; line-height: 1.6; border: 1px solid rgba(0,229,255,0.2); }
+        .chat-container { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; z-index: 10; scroll-behavior: smooth; padding-bottom: 160px; }
+        .bubble-ryuo { align-self: flex-start; max-width: 85%; background: rgba(255,255,255,0.08); border-radius: 20px 20px 20px 0; padding: 15px; font-size: 0.85rem; line-height: 1.6; border: 1px solid rgba(0,229,255,0.2); backdrop-filter: blur(5px); }
         .bubble-user { align-self: flex-end; max-width: 80%; background: var(--seiryu-blue); color: var(--deep-blue); border-radius: 20px 20px 0 20px; padding: 12px; font-size: 0.85rem; font-weight: bold; }
 
-        /* --- Input Area (底上げ調整) --- */
+        /* --- Input Area (底上げ・スマホ最適化) --- */
         .chat-input-wrapper { 
             position: absolute; 
-            bottom: 40px; /* スマホのバーを避けるためにさらに上げました */
-            width: 92%; left: 4%;
-            background: rgba(0,26,51,0.9); padding: 10px; 
-            display: flex; gap: 10px; z-index: 1000; 
-            border: 1px solid rgba(0,229,255,0.4); border-radius: 35px;
-            backdrop-filter: blur(15px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            bottom: 50px; /* タスクバー回避 */
+            width: 90%; left: 5%;
+            background: rgba(0,26,51,0.95); padding: 8px; 
+            display: flex; gap: 8px; z-index: 1000; 
+            border: 1px solid var(--seiryu-blue); border-radius: 40px;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
         }
-        #chat-input { 
-            flex: 1; background: transparent; 
-            border: none; padding: 10px 15px; color: white; outline: none; font-size: 1rem;
-        }
-        .send-btn { 
-            background: var(--seiryu-blue); color: var(--deep-blue); 
-            border: none; width: 45px; height: 45px; border-radius: 50%; 
-            font-weight: bold; cursor: pointer;
-        }
+        #chat-input { flex: 1; background: transparent; border: none; padding: 10px 18px; color: white; outline: none; font-size: 1rem; }
+        .send-btn { background: var(--seiryu-blue); color: var(--deep-blue); border: none; width: 44px; height: 44px; border-radius: 50%; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <header>
-        <button class="back-btn" onclick="location.href='index.html'">↩️ Map</button>
-        <div style="font-weight:bold; font-size:0.8rem;">KUKAI RESONANCE</div>
-        <button class="archive-btn" onclick="toggleArchive()">記録</button>
-    </header>
+        <button class="back-btn" onclick="history.back()">↩️ Map</button>
+        <div style="font-weight:bold; font-size:0.8rem; letter-spacing: 2px;">KUKAI</div>
+        <div style="width: 60px;"></div> </header>
 
     <div id="ryuo-view">
         <canvas id="quantum-canvas"></canvas>
+        <div id="ripple-layer"></div>
 
         <div class="chat-container" id="chat-box">
             <div class="bubble-ryuo">
-                おかえり。何か心に浮かんだ「問い」を投げてごらん。<br>
-                君の言葉が、新しい現実を作る一滴（ひとしずく）になるよ。
+                やあ、観測者の君。何か心に浮かんだ「問い」はあるかな？<br>
+                言葉にすることで、君の周りのエネルギーが形になっていくよ。
             </div>
         </div>
         
@@ -74,11 +79,9 @@
 
 <script>
     // --- Audio System ---
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
     let audioCtx;
-
     function playPichan() {
-        if (!audioCtx) audioCtx = new AudioCtx();
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         const now = audioCtx.currentTime;
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
@@ -91,6 +94,19 @@
         osc.start(); osc.stop(now + 0.8);
     }
 
+    // --- Visual Ripple Effect ---
+    function createRipple() {
+        const layer = document.getElementById('ripple-layer');
+        const ripple = document.createElement('div');
+        ripple.className = 'ripple';
+        // 画面中央から発生
+        ripple.style.top = '50%';
+        ripple.style.left = '50%';
+        layer.appendChild(ripple);
+        // アニメーション終了後に要素を削除
+        setTimeout(() => ripple.remove(), 1200);
+    }
+
     // --- Particle System ---
     const canvas = document.getElementById('quantum-canvas');
     const ctx = canvas.getContext('2d');
@@ -99,11 +115,11 @@
     resize();
 
     class Particle {
-        constructor() { this.x = Math.random()*canvas.width; this.y = Math.random()*canvas.height; this.s = Math.random()*1.5; }
-        update() { this.x += 0.2; if(this.x > canvas.width) this.x = 0; }
-        draw() { ctx.beginPath(); ctx.arc(this.x, this.y, this.s, 0, Math.PI*2); ctx.fillStyle = "rgba(0, 229, 255, 0.3)"; ctx.fill(); }
+        constructor() { this.x = Math.random()*canvas.width; this.y = Math.random()*canvas.height; this.s = Math.random()*1.5; this.o = Math.random(); }
+        update() { this.y -= 0.3; if(this.y < 0) this.y = canvas.height; }
+        draw() { ctx.beginPath(); ctx.arc(this.x, this.y, this.s, 0, Math.PI*2); ctx.fillStyle = `rgba(0, 229, 255, ${this.o})`; ctx.fill(); }
     }
-    const particles = Array.from({length:30}, () => new Particle());
+    const particles = Array.from({length:40}, () => new Particle());
     function animate() { ctx.clearRect(0,0,canvas.width,canvas.height); particles.forEach(p=>{p.update(); p.draw();}); requestAnimationFrame(animate); }
     animate();
 
@@ -113,14 +129,17 @@
         const text = input.value.trim();
         if (!text) return;
 
-        playPichan(); // 送信時のピチャーン！
+        // 音と波紋の共鳴
+        playPichan();
+        createRipple();
+
         addBubble(text, 'user');
         input.value = '';
 
         setTimeout(() => {
             const reply = getKukaiResponse(text);
             addBubble(reply, 'ryuo');
-        }, 1200);
+        }, 1300);
     }
 
     function addBubble(text, type) {
@@ -134,6 +153,7 @@
 
     function getKukaiResponse(input) {
         if(input.includes("農業")) return "土を愛でることは、地球とシンクロすること。君が今日感じた土の感触も、大切なエネルギーの交換なんだよ。";
+        if(input.includes("龍")) return "龍は君の『勢い』そのもの。君が言葉を投げたから、今、この湖面に新しい波紋（可能性）が広がったんだね。";
         return "その問いかけ、とても素敵な響きだね。君が意識を向けることで、未来の可能性が一つに絞り込まれていくんだ。";
     }
 </script>
