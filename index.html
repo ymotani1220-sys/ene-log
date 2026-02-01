@@ -3,13 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Brave Gate - Perfect Sync</title>
+    <title>ENE-LOG - Perfect Sync Gate</title>
     <style>
         :root { --seiryu-blue: #00e5ff; }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; font-family: serif; }
+        
+        /* Base layers */
         #video-container { position: fixed; inset: 0; z-index: 1; }
         video { width: 100%; height: 100%; object-fit: cover; }
         #particle-canvas { position: fixed; inset: 0; z-index: 9; pointer-events: none; }
+        
+        /* Kotodama */
         #kotodama-container { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 10; pointer-events: none; text-align: center; }
         .kanji-word { font-size: 100px; color: white; text-shadow: 0 0 20px var(--seiryu-blue); opacity: 0; }
         
@@ -20,6 +24,23 @@
             100% { opacity: 0; transform: scale(1.4); filter: blur(15px); }
         }
 
+        /* 独自メッセージ（Alertの代わり） */
+        #custom-alert {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 80%; max-width: 300px; background: rgba(0, 26, 51, 0.9);
+            border: 2px solid var(--seiryu-blue); border-radius: 20px;
+            padding: 30px 20px; color: white; text-align: center;
+            z-index: 1000; display: none; backdrop-filter: blur(10px);
+            box-shadow: 0 0 30px rgba(0, 229, 255, 0.4);
+        }
+        #custom-alert h3 { margin: 0 0 10px; color: var(--seiryu-blue); letter-spacing: 5px; }
+        #custom-alert p { font-size: 0.8rem; margin-bottom: 20px; opacity: 0.9; }
+        #custom-alert button {
+            background: var(--seiryu-blue); border: none; padding: 10px 30px;
+            border-radius: 20px; font-weight: bold; color: #001a33;
+        }
+
+        /* UI elements */
         .shutter-btn { 
             position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%); 
             width: 80px; height: 80px; border-radius: 50%; border: 4px solid #fff; 
@@ -37,17 +58,21 @@
     <div id="setup-layer" onclick="setupAudio()">
         <div>
             <div style="font-size: 50px; margin-bottom: 20px;">🐉</div>
-            <p style="letter-spacing: 2px;">画面をタップして<br>ENE-LOGを起動してください</p>
+            <p>画面をタップして<br>門を開いてください</p>
         </div>
+    </div>
+
+    <div id="custom-alert">
+        <h3 id="alert-title">ピチャーン！</h3>
+        <p id="alert-msg">新しい智慧の鱗を観測しました。</p>
+        <button onclick="closeAlert()">Tableへ持ち寄る</button>
     </div>
 
     <div id="video-container"><video id="webcam" autoplay playsinline muted></video></div>
     <canvas id="particle-canvas"></canvas>
     
     <div id="kotodama-container">
-        <div>
-            <div id="kanji-output" class="kanji-word">龍</div>
-        </div>
+        <div><div id="kanji-output" class="kanji-word">龍</div></div>
     </div>
 
     <div class="shutter-btn" onclick="observe()"></div>
@@ -71,34 +96,28 @@
         osc.frequency.exponentialRampToValueAtTime(800, now + 2);
         gain.gain.setValueAtTime(0, now);
         gain.gain.linearRampToValueAtTime(0.3, now + 0.5);
-        gain.gain.exponentialRampToValueAtTime(0.01, now + 2.5);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(now + 2.5);
+        gain.gain.exponentialRampToValueAtTime(0, now + 2.5);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(now + 2.5);
     }
 
     function playPichanSound() {
         const now = audioCtx.currentTime;
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
-        // 水の音をシミュレートする高い正弦波
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(1000, now);
-        osc.frequency.exponentialRampToValueAtTime(1600, now + 0.05);
+        osc.frequency.setValueAtTime(1200, now);
+        osc.frequency.exponentialRampToValueAtTime(1800, now + 0.05);
         gain.gain.setValueAtTime(0.5, now);
         gain.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(now + 0.8);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(now + 0.8);
     }
 
-    // --- 描画ロジック ---
     const canvas = document.getElementById('particle-canvas');
     const ctx = canvas.getContext('2d');
     let particles = [];
-    const kanjis = ["龍", "響", "生", "耕", "結", "開"];
+    const kanjis = ["龍", "響", "生", "耕", "結", "開", "慧", "湧"];
 
     function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
     window.addEventListener('resize', resize);
@@ -111,10 +130,10 @@
 
     class Particle {
         constructor(a, rs) { this.a = a; this.r = 0; this.rs = rs; this.l = 1.0; }
-        update() { this.a += 0.2; this.r += this.rs; this.l -= 0.02; }
+        update() { this.a += 0.22; this.r += this.rs; this.l -= 0.015; }
         draw() {
             ctx.beginPath();
-            ctx.arc(canvas.width/2 + Math.cos(this.a)*this.r, canvas.height/2 + Math.sin(this.a)*this.r, 2.5, 0, Math.PI*2);
+            ctx.arc(canvas.width/2 + Math.cos(this.a)*this.r, canvas.height/2 + Math.sin(this.a)*this.r, 3, 0, Math.PI*2);
             ctx.fillStyle = `hsla(185, 100%, 70%, ${this.l})`;
             ctx.fill();
         }
@@ -128,33 +147,32 @@
     }
 
     function observe() {
-        if(!audioCtx) return;
+        if(!audioCtx || document.getElementById('custom-alert').style.display === 'block') return;
         
-        // 1. 龍の音（開始時）
         playSeiryuSound();
-
-        // 2. 演出
-        for(let i=0; i<80; i++) {
+        for(let i=0; i<100; i++) {
             setTimeout(() => {
-                particles.push(new Particle(i*0.25, 2.5 + Math.random()*2));
+                particles.push(new Particle(i*0.2, 2.8 + Math.random()*2));
                 if(i===0) animate();
-            }, i*10);
+            }, i * 8);
         }
         
         const kOut = document.getElementById('kanji-output');
         kOut.innerText = kanjis[Math.floor(Math.random()*kanjis.length)];
         kOut.style.animation = 'none';
         void kOut.offsetWidth;
-        kOut.style.animation = 'kanjiResonance 2.5s forwards';
+        kOut.style.animation = 'kanjiResonance 2.8s forwards';
 
-        // 3. 雫の音を先に鳴らしてから、わずかに遅らせてalertを出す
+        // タイミングをミリ秒単位で調整
         setTimeout(() => {
             playPichanSound();
-            // alertが音を止めないように、さらに少し遅延させる
-            setTimeout(() => {
-                alert(`「ピチャーン！」\n新しい智慧の鱗を観測しました。`);
-            }, 100); 
-        }, 2200); // 演出の終了間際に合わせる
+            // 音が鳴り始めた直後に、プログラムを止めないメッセージを出す
+            document.getElementById('custom-alert').style.display = 'block';
+        }, 2100); 
+    }
+
+    function closeAlert() {
+        document.getElementById('custom-alert').style.display = 'none';
     }
 </script>
 </body>
