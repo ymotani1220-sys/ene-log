@@ -3,157 +3,127 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ENE-LOG - Ryuo's Wisdom</title>
+    <title>ENE-LOG - Dialogue with KUKAI</title>
     <style>
         :root {
             --seiryu-blue: #00e5ff;
             --deep-blue: #001a33;
-            --agri: #4CAF50; --skill: #673AB7; --space: #FF9800; --person: #e91e63;
             --header-height: 60px; --nav-height: 75px;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body, html { width: 100%; height: 100%; font-family: 'Hiragino Mincho ProN', serif; overflow: hidden; background: var(--deep-blue); }
+        body, html { width: 100%; height: 100%; font-family: 'Hiragino Mincho ProN', serif; overflow: hidden; background: #000; }
 
         /* --- Framework --- */
-        header { position: fixed; top: 0; width: 100%; height: var(--header-height); background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: space-between; padding: 0 15px; z-index: 3000; border-bottom: 1px solid #ddd; }
+        header { position: fixed; top: 0; width: 100%; height: var(--header-height); background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; z-index: 3000; border-bottom: 1px solid #ddd; }
         .view { display: none; width: 100%; height: calc(100vh - var(--header-height) - var(--nav-height)); margin-top: var(--header-height); position: relative; overflow-y: auto; background: #f0f4f8; }
         .view.active { display: block; }
 
-        /* --- Ryuo View (Deep Dark) --- */
-        #ryuo-view { background: radial-gradient(circle at center, #003366 0%, #000 100%); color: white; padding: 20px; }
-        .ryuo-spirit { font-size: 60px; margin-top: 30px; animation: float 4s infinite ease-in-out; display: inline-block; }
-        @keyframes float { 0%, 100% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 10px var(--seiryu-blue)); } 50% { transform: translateY(-15px) scale(1.1); filter: drop-shadow(0 0 25px var(--seiryu-blue)); } }
+        /* --- Ryuo Chat View --- */
+        #ryuo-view { background: radial-gradient(circle at center, #002b55 0%, #000 100%); display: flex; flex-direction: column; color: white; }
         
-        .wisdom-paper { background: rgba(255,255,255,0.05); border: 1px solid rgba(0,229,255,0.3); border-radius: 20px; padding: 25px; margin-top: 30px; backdrop-filter: blur(10px); min-height: 150px; position: relative; }
-        .wisdom-text { font-size: 0.95rem; line-height: 1.8; text-align: left; opacity: 0; transition: 1.5s; }
-        .wisdom-text.reveal { opacity: 1; }
-        .wisdom-sign { margin-top: 20px; text-align: right; font-size: 0.8rem; color: var(--seiryu-blue); border-top: 1px solid rgba(0,229,255,0.2); padding-top: 10px; }
+        .chat-container { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; scroll-behavior: smooth; }
+        
+        /* 龍王のメッセージ */
+        .bubble-ryuo { align-self: flex-start; max-width: 85%; background: rgba(0, 229, 255, 0.1); border: 1px solid rgba(0, 229, 255, 0.3); border-radius: 20px 20px 20px 0; padding: 15px; font-size: 0.85rem; line-height: 1.6; position: relative; animation: fadeIn 0.5s ease-out; }
+        .bubble-ryuo::before { content: "🐲"; position: absolute; top: -10px; left: -10px; font-size: 1.2rem; }
+        
+        /* ユーザーのメッセージ */
+        .bubble-user { align-self: flex-end; max-width: 80%; background: var(--seiryu-blue); color: var(--deep-blue); border-radius: 20px 20px 0 20px; padding: 12px; font-size: 0.85rem; font-weight: bold; animation: fadeIn 0.3s ease-out; }
 
-        /* --- Elements --- */
-        .node { position: absolute; transform: translate(-50%, -50%); width: 44px; height: 48px; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); display: flex; align-items: center; justify-content: center; font-size: 18px; color: white; }
-        .table-container { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 15px; }
-        .item-card { background: white; border-radius: 12px; padding: 10px; margin-bottom: 8px; border-left: 5px solid #ccc; font-size: 0.7rem; color: #333; }
-        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 入力エリア */
+        .chat-input-wrapper { background: rgba(255,255,255,0.05); padding: 15px; border-top: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); display: flex; gap: 10px; }
+        #chat-input { flex: 1; background: rgba(255,255,255,0.1); border: 1px solid var(--seiryu-blue); border-radius: 25px; padding: 10px 20px; color: white; outline: none; font-size: 0.9rem; }
+        .send-btn { background: var(--seiryu-blue); color: var(--deep-blue); border: none; width: 45px; height: 45px; border-radius: 50%; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+        /* 思考中アニメーション */
+        .thinking { display: none; padding: 10px; color: var(--seiryu-blue); font-size: 0.7rem; letter-spacing: 2px; }
+        .pulse { animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
+
+        /* --- Nav --- */
         nav { position: fixed; bottom: 0; width: 100%; height: var(--nav-height); background: var(--deep-blue); display: flex; align-items: center; z-index: 4000; padding-bottom: 10px; }
-        .nav-btn { flex: 1; color: white; border: none; background: none; display: flex; flex-direction: column; align-items: center; font-size: 0.6rem; opacity: 0.4; }
+        .nav-btn { flex: 1; color: white; border: none; background: none; display: flex; flex-direction: column; align-items: center; font-size: 0.6rem; opacity: 0.4; cursor: pointer; }
         .nav-btn.active { opacity: 1; color: var(--seiryu-blue); }
     </style>
 </head>
 <body>
 
     <header>
-        <div style="font-weight:bold; font-size:0.7rem; margin-left:10px;">💠 ENE-LOG</div>
-        <div style="font-size:0.6rem; color:#666; margin-right:10px;">龍王の智慧 Ver 1.0</div>
+        <div style="font-weight:bold; font-size:0.8rem; color: #000;">💠 ENE-LOG : 智慧の対話</div>
     </header>
 
-    <div id="home-view" class="view active">
-        <div id="map-area" style="width:100%; height:100%; background:#07192f;"></div>
-    </div>
-
-    <div id="table-view" class="view">
-        <div class="table-container">
-            <div class="table-col"><div style="color:#000; font-size:0.7rem; font-weight:bold; margin-bottom:10px;">🥘 持ち寄り</div><div id="off-list"></div></div>
-            <div class="table-col"><div style="color:#000; font-size:0.7rem; font-weight:bold; margin-bottom:10px;">🍽 リクエスト</div><div id="req-list"></div></div>
-        </div>
-    </div>
-
-    <div id="ryuo-view" class="view">
-        <div style="text-align:center;">
-            <div class="ryuo-spirit">🐲</div>
-            <h2 style="color:var(--seiryu-blue); letter-spacing:5px; margin-top:10px;">龍王の智慧</h2>
-            
-            <div class="wisdom-paper">
-                <div id="wisdom-content" class="wisdom-text">...エネルギーを読み解いています...</div>
-                <div class="wisdom-sign">観測者：KUKAI</div>
+    <div id="ryuo-view" class="view active">
+        <div class="chat-container" id="chat-box">
+            <div class="bubble-ryuo">
+                よくぞ参った、観測者よ。今のあなたのエネルギーは「耕」の波動を感じる。何か龍王に問いたいことはあるか？
             </div>
-            
-            <button onclick="invokeWisdom()" style="margin-top:30px; background:none; border:1px solid var(--seiryu-blue); color:var(--seiryu-blue); padding:12px 30px; border-radius:30px; font-weight:bold; cursor:pointer;">智慧を授かる</button>
+        </div>
+        
+        <div id="thinking-indicator" class="thinking pulse" style="text-align: center;">KUKAI IS OBSERVING...</div>
+
+        <div class="chat-input-wrapper">
+            <input type="text" id="chat-input" placeholder="龍王に問う..." onkeypress="if(event.key==='Enter') sendMessage()">
+            <button class="send-btn" onclick="sendMessage()">問</button>
         </div>
     </div>
 
     <nav>
-        <button class="nav-btn active" onclick="switchView('home-view', this)">🗺<span>Map</span></button>
-        <button class="nav-btn" onclick="switchView('table-view', this)">🥘<span>Table</span></button>
-        <button class="nav-btn" onclick="switchView('ryuo-view', this)">🐲<span>龍王</span></button>
+        <button class="nav-btn" onclick="location.reload()">🗺<span>Map</span></button>
+        <button class="nav-btn" onclick="location.reload()">🥘<span>Table</span></button>
+        <button class="nav-btn active">🐲<span>龍王</span></button>
     </nav>
 
 <script>
-    // 蓄積されたデータ（将来的にAPIで保存・取得される部分）
-    let db = [
-        { type:'agri', mode:'give', title:'納豆菌の知見', icon:'🌱' },
-        { type:'person', mode:'give', title:'Table案内', icon:'👤' },
-        { type:'skill', mode:'want', title:'量子力学の理解', icon:'💡' }
+    const chatBox = document.getElementById('chat-box');
+    const chatInput = document.getElementById('chat-input');
+    const thinking = document.getElementById('thinking-indicator');
+
+    // 簡易的な龍王の知恵袋（シミュレーション用）
+    const responses = [
+        { key: "農業", text: "土を愛でることは、地球の肺を整えること。納豆菌の実験は、ミクロの秩序を整える尊い仕事ですな。" },
+        { key: "人", text: "人は一石。あなたが波紋を起こせば、必ず誰かの鱗に届きます。まずはTableに座ることから始めなさい。" },
+        { key: "どうすれば", text: "答えを外に求めてはならん。今のTableに足りないのは、あなたの『わがまま』かもしれんぞ。" },
+        { key: "龍", text: "龍はあなたの中に棲んでいる。観測（Gate）を続けることで、その背中はより鮮明に見えてくるはずだ。" }
     ];
 
-    function switchView(id, btn) {
-        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        if(id === 'ryuo-view') invokeWisdom();
-        if(id === 'home-view') render();
-        if(id === 'table-view') render();
-    }
+    function sendMessage() {
+        const text = chatInput.value.trim();
+        if (!text) return;
 
-    // --- 龍王の智慧ロジック ---
-    function invokeWisdom() {
-        const content = document.getElementById('wisdom-content');
-        content.classList.remove('reveal');
+        // ユーザーのバブル追加
+        addBubble(text, 'user');
+        chatInput.value = '';
         
-        // データの分析
-        const gives = db.filter(i => i.mode === 'give').length;
-        const wants = db.filter(i => i.mode === 'want').length;
-        const mainCat = db[0]?.type || 'none';
+        // 思考中演出
+        thinking.style.display = 'block';
+        chatBox.scrollTop = chatBox.scrollHeight;
 
-        let message = "";
-        
-        if (db.length === 0) {
-            message = "まだ海面は静かです。まずはあなたという石を投じなさい。小さな『持ち寄り』から、全ての波紋は始まります。";
-        } else if (gives > wants) {
-            message = `あなたの「持ち寄る」エネルギーが満ちています。${db[0].title}という鱗は、誰かの渇きを癒すでしょう。次はあえて「求める」ことで、他者が輝く空（くう）を作りなさい。`;
-        } else if (wants >= gives) {
-            message = "求める心は、新しい知恵を呼び込む門です。しかし、空っぽの器に水は溜まりません。${db[0].title}への渇望を、少しの「持ち寄り」に変えてごらんなさい。循環が始まります。";
-        } else {
-            message = "調和は保たれています。今のあなたは、東広島の土壌と深く共鳴しています。そのまま、目の前のアハ体験を観測し続けなさい。";
-        }
-
+        // 龍王の返答（1.5秒後）
         setTimeout(() => {
-            content.innerText = message;
-            content.classList.add('reveal');
-        }, 500);
+            thinking.style.display = 'none';
+            const reply = getRyuoResponse(text);
+            addBubble(reply, 'ryuo');
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }, 1500);
     }
 
-    function render() {
-        // Map Rendering
-        const map = document.getElementById('map-area');
-        if(map) {
-            map.innerHTML = '';
-            db.forEach((item, i) => {
-                const el = document.createElement('div');
-                el.className = `node node--${item.type}`;
-                el.innerHTML = item.icon;
-                el.style.top = (30 + i*15) + '%'; el.style.left = (20 + i*20) + '%';
-                map.appendChild(el);
-            });
-        }
-        // Table Rendering
-        const offList = document.getElementById('off-list');
-        const reqList = document.getElementById('req-list');
-        if(offList && reqList) {
-            offList.innerHTML = ''; reqList.innerHTML = '';
-            db.forEach(item => {
-                const card = document.createElement('div');
-                card.className = 'item-card';
-                card.style.borderLeftColor = `var(--${item.type})`;
-                card.innerHTML = `<strong>${item.icon} ${item.title}</strong>`;
-                if(item.mode === 'give') offList.appendChild(card);
-                else reqList.appendChild(card);
-            });
-        }
+    function addBubble(text, type) {
+        const bubble = document.createElement('div');
+        bubble.className = type === 'user' ? 'bubble-user' : 'bubble-ryuo';
+        bubble.innerText = text;
+        chatBox.appendChild(bubble);
     }
-    
-    window.onload = render;
+
+    function getRyuoResponse(input) {
+        // キーワードマッチング
+        for (let res of responses) {
+            if (input.includes(res.key)) return res.text;
+        }
+        return "その問い、面白い。しかし今はまず、目の前の小さなアハ体験を観測することに集中しなさい。道は自ずと拓ける。";
+    }
 </script>
 </body>
 </html>
