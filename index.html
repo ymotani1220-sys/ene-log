@@ -2,18 +2,17 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ENE-LOG - Perfect Sync Gate</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ENE-LOG - Brave Gate Final Sync</title>
     <style>
         :root { --seiryu-blue: #00e5ff; }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; font-family: serif; }
         
-        /* Base layers */
+        /* レイヤー構造 */
         #video-container { position: fixed; inset: 0; z-index: 1; }
         video { width: 100%; height: 100%; object-fit: cover; }
-        #particle-canvas { position: fixed; inset: 0; z-index: 9; pointer-events: none; }
+        #particle-canvas { position: fixed; inset: 0; z-index: 5; pointer-events: none; }
         
-        /* Kotodama */
         #kotodama-container { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 10; pointer-events: none; text-align: center; }
         .kanji-word { font-size: 100px; color: white; text-shadow: 0 0 20px var(--seiryu-blue); opacity: 0; }
         
@@ -27,28 +26,31 @@
         /* 独自メッセージ（Alertの代わり） */
         #custom-alert {
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 80%; max-width: 300px; background: rgba(0, 26, 51, 0.9);
+            width: 80%; max-width: 300px; background: rgba(0, 26, 51, 0.95);
             border: 2px solid var(--seiryu-blue); border-radius: 20px;
             padding: 30px 20px; color: white; text-align: center;
-            z-index: 1000; display: none; backdrop-filter: blur(10px);
-            box-shadow: 0 0 30px rgba(0, 229, 255, 0.4);
+            z-index: 2000; display: none; backdrop-filter: blur(15px);
+            box-shadow: 0 0 40px rgba(0, 229, 255, 0.5);
         }
         #custom-alert h3 { margin: 0 0 10px; color: var(--seiryu-blue); letter-spacing: 5px; }
-        #custom-alert p { font-size: 0.8rem; margin-bottom: 20px; opacity: 0.9; }
         #custom-alert button {
-            background: var(--seiryu-blue); border: none; padding: 10px 30px;
-            border-radius: 20px; font-weight: bold; color: #001a33;
+            background: var(--seiryu-blue); border: none; padding: 12px 40px;
+            border-radius: 25px; font-weight: bold; color: #001a33; margin-top: 20px;
+            -webkit-appearance: none;
         }
 
-        /* UI elements */
+        /* シャッターボタンを確実に最前面へ */
         .shutter-btn { 
             position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%); 
-            width: 80px; height: 80px; border-radius: 50%; border: 4px solid #fff; 
-            background: rgba(255,255,255,0.2); z-index: 100; cursor: pointer;
+            width: 85px; height: 85px; border-radius: 50%; border: 5px solid #fff; 
+            background: rgba(255,255,255,0.2); z-index: 1000; cursor: pointer;
             -webkit-tap-highlight-color: transparent;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
         }
+        .shutter-btn:active { background: var(--seiryu-blue); transform: translateX(-50%) scale(0.9); }
+
         #setup-layer {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999;
+            position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999;
             display: flex; align-items: center; justify-content: center; color: white; text-align: center;
         }
     </style>
@@ -57,8 +59,8 @@
 
     <div id="setup-layer" onclick="setupAudio()">
         <div>
-            <div style="font-size: 50px; margin-bottom: 20px;">🐉</div>
-            <p>画面をタップして<br>門を開いてください</p>
+            <div style="font-size: 60px; margin-bottom: 20px;">⛩️</div>
+            <p style="letter-spacing: 2px;">タップして門を開き、<br>ENE-LOGを起動してください</p>
         </div>
     </div>
 
@@ -79,6 +81,7 @@
 
 <script>
     let audioCtx;
+    let isObserving = false;
     
     function setupAudio() {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -93,10 +96,10 @@
         const gain = audioCtx.createGain();
         osc.type = 'triangle';
         osc.frequency.setValueAtTime(150, now);
-        osc.frequency.exponentialRampToValueAtTime(800, now + 2);
+        osc.frequency.exponentialRampToValueAtTime(900, now + 2);
         gain.gain.setValueAtTime(0, now);
-        gain.gain.linearRampToValueAtTime(0.3, now + 0.5);
-        gain.gain.exponentialRampToValueAtTime(0, now + 2.5);
+        gain.gain.linearRampToValueAtTime(0.4, now + 0.4);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 2.5);
         osc.connect(gain); gain.connect(audioCtx.destination);
         osc.start(); osc.stop(now + 2.5);
     }
@@ -106,10 +109,10 @@
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(1200, now);
-        osc.frequency.exponentialRampToValueAtTime(1800, now + 0.05);
+        osc.frequency.setValueAtTime(1100, now);
+        osc.frequency.exponentialRampToValueAtTime(1700, now + 0.05);
         gain.gain.setValueAtTime(0.5, now);
-        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
         osc.connect(gain); gain.connect(audioCtx.destination);
         osc.start(); osc.stop(now + 0.8);
     }
@@ -124,17 +127,22 @@
     resize();
 
     async function initCamera() {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-        document.getElementById('webcam').srcObject = stream;
+        const constraints = { video: { facingMode: "environment" } };
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+            document.getElementById('webcam').srcObject = stream;
+        } catch (e) {
+            console.error("Camera error:", e);
+        }
     }
 
     class Particle {
         constructor(a, rs) { this.a = a; this.r = 0; this.rs = rs; this.l = 1.0; }
-        update() { this.a += 0.22; this.r += this.rs; this.l -= 0.015; }
+        update() { this.a += 0.25; this.r += this.rs; this.l -= 0.015; }
         draw() {
             ctx.beginPath();
             ctx.arc(canvas.width/2 + Math.cos(this.a)*this.r, canvas.height/2 + Math.sin(this.a)*this.r, 3, 0, Math.PI*2);
-            ctx.fillStyle = `hsla(185, 100%, 70%, ${this.l})`;
+            ctx.fillStyle = `hsla(185, 100%, 75%, ${this.l})`;
             ctx.fill();
         }
     }
@@ -143,18 +151,19 @@
         ctx.clearRect(0,0,canvas.width,canvas.height);
         particles = particles.filter(p=>p.l>0);
         particles.forEach(p=>{ p.update(); p.draw(); });
-        if(particles.length>0) requestAnimationFrame(animate);
+        if(particles.length > 0) requestAnimationFrame(animate);
     }
 
     function observe() {
-        if(!audioCtx || document.getElementById('custom-alert').style.display === 'block') return;
+        if(!audioCtx || isObserving) return;
+        isObserving = true;
         
         playSeiryuSound();
         for(let i=0; i<100; i++) {
             setTimeout(() => {
-                particles.push(new Particle(i*0.2, 2.8 + Math.random()*2));
+                particles.push(new Particle(i*0.2, 3 + Math.random()*2));
                 if(i===0) animate();
-            }, i * 8);
+            }, i * 7);
         }
         
         const kOut = document.getElementById('kanji-output');
@@ -163,16 +172,15 @@
         void kOut.offsetWidth;
         kOut.style.animation = 'kanjiResonance 2.8s forwards';
 
-        // タイミングをミリ秒単位で調整
         setTimeout(() => {
             playPichanSound();
-            // 音が鳴り始めた直後に、プログラムを止めないメッセージを出す
             document.getElementById('custom-alert').style.display = 'block';
-        }, 2100); 
+        }, 2200); 
     }
 
     function closeAlert() {
         document.getElementById('custom-alert').style.display = 'none';
+        isObserving = false; // 次のシャッターを許可
     }
 </script>
 </body>
