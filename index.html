@@ -3,144 +3,125 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ENE-LOG - The Final Integration</title>
+    <title>ENE-LOG - The Perfect Integration</title>
     <style>
         :root {
             --seiryu-blue: #00e5ff; --deep-blue: #001a33;
             --person: #e91e63; --agri: #4CAF50; --skill: #673AB7; --space: #FF9800;
-            --header-h: 65px; --nav-h: 75px;
+            --header-h: 60px; --nav-h: 75px;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-        body, html { width: 100%; height: 100%; font-family: 'Hiragino Mincho ProN', serif; overflow: hidden; background: var(--deep-blue); }
+        body, html { width: 100%; height: 100%; font-family: 'Hiragino Mincho ProN', serif; overflow: hidden; background: #000; }
 
-        /* --- UI Layers --- */
+        /* --- Layers --- */
         #setup-layer { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 9999; display: flex; align-items: center; justify-content: center; color: white; text-align: center; }
+        header { position: fixed; top: 0; width: 100%; height: var(--header-h); background: rgba(255,255,255,0.95); display: flex; align-items: center; justify-content: space-between; padding: 0 15px; z-index: 3000; }
         
-        header { 
-            position: fixed; top: 0; width: 100%; height: var(--header-h); 
-            background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); 
-            display: flex; flex-direction: column; justify-content: center; z-index: 3000; border-bottom: 1px solid #ddd;
-        }
-        .header-top { display: flex; justify-content: space-between; align-items: center; padding: 0 15px; width: 100%; }
-        .layer-bar { display: flex; gap: 5px; padding: 5px 15px; overflow-x: auto; scrollbar-width: none; }
-        .chip { padding: 3px 10px; border-radius: 12px; font-size: 0.6rem; border: 1px solid #ccc; background: white; white-space: nowrap; opacity: 0.4; }
-        .chip.active { opacity: 1; color: white; border-color: transparent; }
-
-        .view { display: none; width: 100%; height: calc(100vh - var(--header-h) - var(--nav-h)); margin-top: var(--header-h); position: relative; overflow-y: auto; background: #f0f4f8; }
+        .view { display: none; width: 100%; height: calc(100vh - var(--nav-h)); position: absolute; top: 0; left: 0; overflow-y: auto; background: #f0f4f8; }
         .view.active { display: block; }
 
-        /* --- Home (Map) --- */
+        /* --- Map & Layer Buttons --- */
         #home-view { background: #07192f url('https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&q=80&w=2000') center/cover; }
+        .layer-side-nav { position: absolute; right: 15px; top: 80px; display: flex; flex-direction: column; gap: 10px; z-index: 3500; }
+        .side-btn { width: 45px; height: 45px; border-radius: 50%; border: 2px solid white; color: white; font-size: 0.7rem; font-weight: bold; display: flex; align-items: center; justify-content: center; opacity: 0.4; transition: 0.3s; }
+        .side-btn.active { opacity: 1; transform: scale(1.1); box-shadow: 0 0 15px var(--seiryu-blue); }
+
+        /* --- Nodes (鱗と顔) --- */
         .node { position: absolute; transform: translate(-50%, -50%); transition: 0.4s; }
-        .node--scale { width: 44px; height: 48px; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+        .node--person { width: 50px; height: 50px; border-radius: 50%; border: 3px solid var(--person); overflow: hidden; background: white; }
+        .node--person img { width: 100%; height: 100%; object-fit: cover; }
+        .node--scale { width: 44px; height: 48px; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; }
 
-        /* --- Input Modal --- */
-        #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 8000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
-        .modal-inner { width: 90%; max-width: 400px; background: white; border-radius: 25px; padding: 20px; max-height: 85vh; overflow-y: auto; }
-        .mode-sw { display: flex; background: #eee; border-radius: 20px; padding: 3px; margin-bottom: 15px; }
-        .mode-btn { flex: 1; border: none; padding: 8px; border-radius: 18px; font-size: 0.7rem; background: none; }
-        .mode-btn.active { background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .sphere-sel { display: flex; justify-content: space-around; margin-bottom: 15px; }
-        .sphere-btn { width: 40px; height: 40px; border-radius: 50%; border: none; opacity: 0.3; color: white; font-size: 0.6rem; }
-        .sphere-btn.active { opacity: 1; transform: scale(1.1); }
-        input, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; margin-bottom: 10px; font-size: 1rem; }
+        /* --- Table (横並び強制) --- */
+        .table-flex { display: flex; height: 100%; padding: 70px 10px 10px; gap: 10px; }
+        .table-col { flex: 1; background: rgba(255,255,255,0.7); border-radius: 15px; padding: 10px; overflow-y: auto; }
 
-        /* --- KUKAI Dialogue --- */
-        #ryuo-view { background: radial-gradient(circle at 50% 100%, #003366 0%, #000 100%); display: flex; flex-direction: column; }
-        .chat-container { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; padding-bottom: 120px; }
-        .bubble-ryuo { align-self: flex-start; max-width: 85%; background: rgba(255,255,255,0.1); border-radius: 20px 20px 20px 0; padding: 12px; font-size: 0.85rem; border: 1px solid rgba(0,229,255,0.2); color: white; }
-        .bubble-user { align-self: flex-end; max-width: 80%; background: var(--seiryu-blue); color: var(--deep-blue); border-radius: 20px 20px 0 20px; padding: 10px 15px; font-size: 0.85rem; font-weight: bold; }
-        .kukai-footer { position: absolute; bottom: 30px; width: 90%; left: 5%; background: rgba(0,40,80,0.9); border: 1px solid var(--seiryu-blue); border-radius: 40px; padding: 5px; display: flex; gap: 5px; backdrop-filter: blur(10px); }
+        /* --- Input Modal (写真スペース付) --- */
+        #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 8000; display: none; align-items: center; justify-content: center; }
+        .modal-inner { width: 90%; background: white; border-radius: 20px; padding: 20px; }
+        .photo-space { width: 100%; height: 120px; border: 2px dashed #ccc; border-radius: 10px; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; flex-direction: column; font-size: 0.7rem; color: #999; }
 
-        /* --- Archive --- */
-        #archive-overlay { position: fixed; inset: 0; background: rgba(0,20,40,0.98); z-index: 9000; display: none; flex-direction: column; padding: 80px 20px 20px; }
+        /* --- KUKAI (修正版) --- */
+        #ryuo-view { background: #000; flex-direction: column; }
+        .chat-container { height: calc(100% - 140px); padding: 80px 20px 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+        .kukai-footer { position: fixed; bottom: 90px; width: 92%; left: 4%; background: rgba(0,40,80,0.9); border: 1px solid var(--seiryu-blue); border-radius: 30px; display: flex; padding: 5px; z-index: 4500; }
+        #kukai-input { flex: 1; background: none; border: none; color: white; padding: 10px; font-size: 1rem; outline: none; }
 
-        /* --- Floating Action Button --- */
-        .fab { position: fixed; bottom: 95px; right: 20px; width: 60px; height: 60px; background: var(--seiryu-blue); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; color: var(--deep-blue); z-index: 3500; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        /* --- Brave Gate (復旧) --- */
+        #gate-view { position: fixed; inset: 0; z-index: 9000; display: none; background: #000; }
+        #webcam { width: 100%; height: 100%; object-fit: cover; }
+        #particle-canvas { position: absolute; inset: 0; pointer-events: none; }
 
-        /* --- Footer Nav --- */
-        nav { position: fixed; bottom: 0; width: 100%; height: var(--nav-h); background: var(--deep-blue); display: flex; align-items: center; z-index: 4000; padding-bottom: 15px; }
+        /* --- Footer --- */
+        nav { position: fixed; bottom: 0; width: 100%; height: var(--nav-h); background: var(--deep-blue); display: flex; align-items: center; z-index: 5000; padding-bottom: 15px; }
         .nav-btn { flex: 1; color: white; border: none; background: none; display: flex; flex-direction: column; align-items: center; font-size: 0.6rem; opacity: 0.4; }
         .nav-btn.active { opacity: 1; color: var(--seiryu-blue); }
-
-        .ripple { position: absolute; border: 2px solid var(--seiryu-blue); border-radius: 50%; transform: translate(-50%, -50%); animation: rippleOut 1.2s ease-out forwards; opacity: 0; pointer-events: none; z-index: 5000; }
-        @keyframes rippleOut { 0% { width:0; height:0; opacity:0.8; } 100% { width:150vmax; height:150vmax; opacity:0; } }
     </style>
 </head>
 <body>
 
-    <div id="setup-layer" onclick="initApp()">
-        <div><div style="font-size: 50px;">🐉</div><p>タップして門を開く</p></div>
+    <div id="setup-layer" onclick="initApp()"><div><div style="font-size:50px;">🐲</div><p>ENE-LOG 起動</p></div></div>
+
+    <div id="home-view" class="view active">
+        <div class="layer-side-nav">
+            <div class="side-btn active" style="background:var(--person)" onclick="toggleL('person',this)">人</div>
+            <div class="side-btn active" style="background:var(--agri)" onclick="toggleL('agri',this)">農</div>
+            <div class="side-btn active" style="background:var(--skill)" onclick="toggleL('skill',this)">智慧</div>
+            <div class="side-btn active" style="background:var(--space)" onclick="toggleL('space',this)">場</div>
+        </div>
+        <div id="map-area" style="width:100%; height:100%;"></div>
+    </div>
+
+    <div id="table-view" class="view">
+        <div class="table-flex">
+            <div class="table-col"><strong>🥘 持ち寄り</strong><div id="list-give"></div></div>
+            <div class="table-col"><strong>🍽 リクエスト</strong><div id="list-want"></div></div>
+        </div>
+    </div>
+
+    <div id="ryuo-view" class="view">
+        <button onclick="goMap()" style="position:fixed; top:75px; left:15px; z-index:5000; background:var(--seiryu-blue); border:none; padding:5px 15px; border-radius:15px; font-size:0.7rem; font-weight:bold;">🏠 Map戻る</button>
+        <div class="chat-container" id="chat-box"></div>
+        <div class="kukai-footer">
+            <button onclick="drawLucky()" style="background:none; border:none; color:var(--seiryu-blue); padding:0 10px;">占</button>
+            <input type="text" id="kukai-input" placeholder="問いを記入..." onkeypress="if(event.key==='Enter') sendKukai()">
+            <button onclick="sendKukai()" style="background:var(--seiryu-blue); border:none; width:40px; height:40px; border-radius:50%;">問</button>
+        </div>
+    </div>
+
+    <div id="gate-view">
+        <video id="webcam" autoplay playsinline muted></video>
+        <canvas id="particle-canvas"></canvas>
+        <button onclick="exitGate()" style="position:absolute; top:30px; left:20px; background:rgba(0,0,0,0.5); color:white; border:1px solid var(--seiryu-blue); padding:10px 20px; border-radius:20px;">↩ Map戻る</button>
+        <div id="kanji-output" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:80px; color:white; text-shadow:0 0 20px var(--seiryu-blue);"></div>
+        <div style="position:absolute; bottom:50px; left:50%; transform:translateX(-50%); width:80px; height:80px; border-radius:50%; border:5px solid white;" onclick="observe()"></div>
     </div>
 
     <div id="modal">
         <div class="modal-inner">
-            <div class="mode-sw">
-                <button id="m-give" onclick="setMode('give')" class="mode-btn active">🥘 持ち寄り</button>
-                <button id="m-want" onclick="setMode('want')" class="mode-btn">🍽 リクエスト</button>
-            </div>
-            <div class="sphere-sel">
-                <button id="b-person" onclick="setSphere('person')" class="sphere-btn active" style="background:var(--person)">人</button>
-                <button id="b-agri" onclick="setSphere('agri')" class="sphere-btn" style="background:var(--agri)">農</button>
-                <button id="b-skill" onclick="setSphere('skill')" class="sphere-btn" style="background:var(--skill)">智慧</button>
-                <button id="b-space" onclick="setSphere('space')" class="sphere-btn" style="background:var(--space)">場</button>
-            </div>
+            <div class="photo-space" onclick="alert('カメラ起動')">📷 写真を貼り付け</div>
             <input type="text" id="in-title" placeholder="タイトル">
-            <textarea id="in-desc" rows="3" placeholder="詳細・想い"></textarea>
-            <button onclick="saveItem()" style="width:100%; padding:15px; background:var(--deep-blue); color:white; border-radius:30px; border:none; font-weight:bold;">テーブルへ置く</button>
-            <button onclick="closeModal()" style="width:100%; background:none; border:none; color:#999; margin-top:10px;">閉じる</button>
+            <textarea id="in-desc" placeholder="詳細"></textarea>
+            <button onclick="saveItem()" style="width:100%; padding:15px; background:var(--deep-blue); color:white; border-radius:30px;">テーブルへ置く</button>
+            <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; margin-top:10px; border:none; background:none; color:#999;">閉じる</button>
         </div>
     </div>
-
-    <header>
-        <div class="header-top">
-            <div style="font-weight:bold; font-size:0.75rem; color:var(--deep-blue);">💠 ENE-LOG</div>
-            <button id="arc-btn" style="display:none; background:none; border:1px solid var(--seiryu-blue); color:var(--seiryu-blue); padding:4px 12px; border-radius:15px; font-size:0.6rem;" onclick="toggleArchive()">📜 記録</button>
-        </div>
-        <div class="layer-bar" id="layer-chips">
-            <div class="chip active" style="background:var(--person)" onclick="toggleLayer('person',this)">👤 人</div>
-            <div class="chip active" style="background:var(--agri)" onclick="toggleLayer('agri',this)">🌱 農</div>
-            <div class="chip active" style="background:var(--skill)" onclick="toggleLayer('skill',this)">💡 智慧</div>
-            <div class="chip active" style="background:var(--space)" onclick="toggleLayer('space',this)">🏠 場</div>
-        </div>
-    </header>
-
-    <div id="home-view" class="view active"><div id="map-area" style="width:100%; height:100%;"></div></div>
-    <div id="table-view" class="view">
-        <div class="table-container">
-            <div class="table-col"><div style="font-size:0.7rem; font-weight:bold; border-bottom:1px solid #ddd; margin-bottom:10px;">🥘 持ち寄り</div><div id="list-give"></div></div>
-            <div class="table-col"><div style="font-size:0.7rem; font-weight:bold; border-bottom:1px solid #ddd; margin-bottom:10px;">🍽 リクエスト</div><div id="list-want"></div></div>
-        </div>
-    </div>
-    <div id="ryuo-view" class="view">
-        <div class="chat-container" id="chat-box"><div class="bubble-ryuo">やあ。何か心に浮かんだ「問い」はあるかな？</div></div>
-        <div class="kukai-footer">
-            <button class="lucky-btn" onclick="drawLucky()">占</button>
-            <input type="text" id="kukai-input" placeholder="KUKAIに問う..." onkeypress="if(event.key==='Enter') sendKukai()">
-            <button onclick="sendKukai()" style="background:var(--seiryu-blue); border:none; width:40px; height:40px; border-radius:50%; font-weight:bold;">問</button>
-        </div>
-    </div>
-
-    <div id="archive-overlay">
-        <h3 style="color:var(--seiryu-blue); text-align:center; margin-bottom:20px;">智慧の記録</h3>
-        <div id="arch-list" style="flex:1; overflow-y:auto;"></div>
-        <button onclick="toggleArchive()" style="background:var(--seiryu-blue); border:none; width:100%; padding:15px; border-radius:30px; margin-top:15px;">閉じる</button>
-    </div>
-
-    <button class="fab" id="fab" onclick="openModal()">＋</button>
 
     <nav>
         <button class="nav-btn active" onclick="switchView('home-view', this)">🗺<span>Map</span></button>
         <button class="nav-btn" onclick="switchView('table-view', this)">🥘<span>Table</span></button>
         <button class="nav-btn" onclick="switchView('ryuo-view', this)">🐲<span>KUKAI</span></button>
+        <button class="nav-btn" onclick="enterGate()">⛩<span>Gate</span></button>
     </nav>
 
+    <button id="fab" style="position:fixed; bottom:95px; right:20px; width:60px; height:60px; background:var(--seiryu-blue); border-radius:50%; font-size:30px; z-index:4000;" onclick="document.getElementById('modal').style.display='flex'">＋</button>
+
 <script>
-    let audioCtx, mMode='give', mSphere='person', activeL=['person','agri','skill','space'], history=[];
+    let audioCtx, activeL=['person','agri','skill','space'];
     let db = [
-        { type:'person', icon:'👤', title:'茂谷 幸弘', x:25, y:35, mode:'give', desc:'案内人' },
-        { type:'agri', icon:'🌱', title:'納豆菌実験', x:60, y:50, mode:'want', desc:'協力求む' }
+        { type:'person', icon:'👤', title:'茂谷 幸弘', x:25, y:35, mode:'give', img:'https://i.pravatar.cc/150?u=shigetani' },
+        { type:'agri', icon:'🌱', title:'納豆菌実験', x:60, y:50, mode:'want' }
     ];
 
     function initApp() { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); document.getElementById('setup-layer').style.display='none'; render(); }
@@ -149,69 +130,47 @@
         document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
         document.getElementById(id).classList.add('active');
         document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active');
-        document.getElementById('arc-btn').style.display = (id==='ryuo-view')?'block':'none';
-        document.getElementById('fab').style.display = (id==='ryuo-view')?'none':'flex';
-        render();
+        if(btn) btn.classList.add('active');
+        document.getElementById('fab').style.display = (id==='home-view' || id==='table-view') ? 'block' : 'none';
     }
 
-    function playP() {
-        const n=audioCtx.currentTime, o=audioCtx.createOscillator(), g=audioCtx.createGain();
-        o.type='sine'; o.frequency.setValueAtTime(1100,n); o.frequency.exponentialRampToValueAtTime(1700,n+0.05);
-        g.gain.setValueAtTime(0.4,n); g.gain.exponentialRampToValueAtTime(0.001,n+0.8);
-        o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(n+0.8);
-        const r=document.createElement('div'); r.className='ripple'; r.style.top='50%'; r.style.left='50%';
-        document.body.appendChild(r); setTimeout(()=>r.remove(),1200);
-    }
+    function goMap() { switchView('home-view', document.querySelectorAll('.nav-btn')[0]); }
 
-    function openModal() { document.getElementById('modal').style.display='flex'; }
-    function closeModal() { document.getElementById('modal').style.display='none'; }
-    function setMode(m) { mMode=m; document.getElementById('m-give').className=m==='give'?'mode-btn active':'mode-btn'; document.getElementById('m-want').className=m==='want'?'mode-btn active':'mode-btn'; }
-    function setSphere(s) { mSphere=s; document.querySelectorAll('.sphere-btn').forEach(b=>b.classList.remove('active')); document.getElementById('b-'+s).classList.add('active'); }
-
-    function saveItem() {
-        const t=document.getElementById('in-title').value; if(!t){alert('タイトルを入力してね'); return;}
-        db.unshift({type:mSphere, icon:document.getElementById('b-'+mSphere).innerText, title:t, desc:document.getElementById('in-desc').value, mode:mMode, x:20+Math.random()*60, y:20+Math.random()*60});
-        document.getElementById('in-title').value=''; document.getElementById('in-desc').value='';
-        closeModal(); playP(); render();
-    }
-
-    function toggleLayer(type, btn) {
+    function toggleL(type, btn) {
         if(activeL.includes(type)) activeL=activeL.filter(l=>l!==type); else activeL.push(type);
         btn.classList.toggle('active'); render();
     }
 
-    function sendKukai() {
-        const i=document.getElementById('kukai-input'), t=i.value.trim(); if(!t)return;
-        playP(); addB(t,'user'); i.value='';
-        setTimeout(()=>{
-            const r="君が観測したことで、新しい可能性が形になったね。素敵だよ！";
-            addB(r,'ryuo'); history.unshift({q:t, a:r, d:new Date().toLocaleTimeString()});
-        },1000);
+    async function enterGate() {
+        document.getElementById('gate-view').style.display='block';
+        const s = await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
+        document.getElementById('webcam').srcObject = s;
     }
-    function addB(t,type) { 
-        const b=document.getElementById('chat-box'), d=document.createElement('div');
-        d.className=type==='user'?'bubble-user':'bubble-ryuo'; d.innerText=t; b.appendChild(d); b.scrollTop=b.scrollHeight;
+
+    function exitGate() {
+        document.getElementById('gate-view').style.display='none';
+        const s = document.getElementById('webcam').srcObject; if(s) s.getTracks().forEach(t=>t.stop());
+        goMap();
     }
-    function toggleArchive() {
-        const o=document.getElementById('archive-overlay'); o.style.display=o.style.display==='flex'?'none':'flex';
-        document.getElementById('arch-list').innerHTML=history.map(h=>`<div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:10px; margin-bottom:10px; border-left:3px solid var(--seiryu-blue); font-size:0.7rem;"><div style="color:var(--seiryu-blue); font-size:0.5rem;">${h.d}</div>問: ${h.q}<br>答: ${h.a}</div>`).join('');
-    }
-    function drawLucky() { playP(); addB("今日の君のラッキーエナジーは…「"+['人 👤','農 🌱','智慧 💡','場 🏠'][Math.floor(Math.random()*4)]+"」だよ！", 'ryuo'); }
 
     function render() {
-        const m=document.getElementById('map-area'); if(m) m.innerHTML='';
-        const g=document.getElementById('list-give'); if(g) g.innerHTML='';
-        const w=document.getElementById('list-want'); if(w) w.innerHTML='';
+        const m = document.getElementById('map-area'); m.innerHTML = '';
         db.filter(i=>activeL.includes(i.type)).forEach(i=>{
-            if(m){
-                const n=document.createElement('div'); n.className=`node node--scale node--${i.type}`;
-                n.style.top=i.y+'%'; n.style.left=i.x+'%'; n.innerHTML=i.icon; m.appendChild(n);
+            const n = document.createElement('div');
+            if(i.type==='person'){
+                n.className='node node--person'; n.innerHTML=`<img src="${i.img}">`;
+            } else {
+                n.className='node node--scale'; n.style.background=`var(--${i.type})`; n.innerText=i.icon;
             }
-            const c=document.createElement('div'); c.className='item-card'; c.style.borderLeftColor=`var(--${i.type})`;
-            c.innerHTML=`<strong>${i.icon} ${i.title}</strong><br>${i.desc}`;
-            if(i.mode==='give'){if(g)g.appendChild(c)}else{if(w)w.appendChild(c)}
+            n.style.top=i.y+'%'; n.style.left=i.x+'%'; m.appendChild(n);
         });
+    }
+
+    function sendKukai() {
+        const i=document.getElementById('kukai-input'), t=i.value; if(!t)return;
+        const b=document.getElementById('chat-box');
+        b.innerHTML+=`<div class="bubble-user">${t}</div>`; i.value='';
+        setTimeout(()=> { b.innerHTML+=`<div class="bubble-ryuo">君の問いが、新しい波紋を広げたよ。</div>`; b.scrollTop=b.scrollHeight; }, 1000);
     }
 </script>
 </body>
