@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ENE-LOG - KUKAI Gateway</title>
+    <title>ENE-LOG - Ryuo Resonance</title>
     <style>
         :root {
             --seiryu-blue: #00e5ff;
@@ -14,49 +14,46 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body, html { width: 100%; height: 100%; font-family: 'Hiragino Mincho ProN', serif; background: #000; color: white; overflow: hidden; }
 
-        /* --- Celestial Background --- */
         #ryuo-view { height: 100vh; display: flex; flex-direction: column; position: relative; background: radial-gradient(circle at 50% 100%, #003366 0%, #000 100%); }
         #quantum-canvas { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
 
-        header { height: var(--header-height); display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid rgba(255,255,255,0.1); z-index: 100; backdrop-filter: blur(10px); background: rgba(0,0,0,0.3); }
-        .archive-btn { background: none; border: 1px solid var(--seiryu-blue); color: var(--seiryu-blue); padding: 5px 15px; border-radius: 20px; font-size: 0.75rem; cursor: pointer; }
+        header { height: var(--header-height); display: flex; align-items: center; justify-content: space-between; padding: 0 15px; z-index: 100; backdrop-filter: blur(10px); background: rgba(0,0,0,0.4); }
+        .back-btn { background: rgba(255,255,255,0.1); border: 1px solid var(--seiryu-blue); color: white; padding: 5px 12px; border-radius: 15px; font-size: 0.75rem; cursor: pointer; }
+        .archive-btn { background: none; border: none; color: var(--seiryu-blue); font-size: 0.75rem; text-decoration: underline; cursor: pointer; }
 
         /* --- Chat Area --- */
-        .chat-container { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; z-index: 10; scroll-behavior: smooth; padding-bottom: 100px; }
-        .bubble-ryuo { align-self: flex-start; max-width: 85%; background: rgba(255,255,255,0.08); border-radius: 20px 20px 20px 0; padding: 15px; font-size: 0.85rem; line-height: 1.6; border: 1px solid rgba(0,229,255,0.2); box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .chat-container { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; z-index: 10; scroll-behavior: smooth; padding-bottom: 150px; }
+        .bubble-ryuo { align-self: flex-start; max-width: 85%; background: rgba(255,255,255,0.08); border-radius: 20px 20px 20px 0; padding: 15px; font-size: 0.85rem; line-height: 1.6; border: 1px solid rgba(0,229,255,0.2); }
         .bubble-user { align-self: flex-end; max-width: 80%; background: var(--seiryu-blue); color: var(--deep-blue); border-radius: 20px 20px 0 20px; padding: 12px; font-size: 0.85rem; font-weight: bold; }
 
-        /* --- Input Area (これが消えていました) --- */
+        /* --- Input Area (底上げ調整) --- */
         .chat-input-wrapper { 
-            position: absolute; bottom: 0; width: 100%;
-            background: rgba(0,26,51,0.9); padding: 15px 15px 30px 15px; 
+            position: absolute; 
+            bottom: 40px; /* スマホのバーを避けるためにさらに上げました */
+            width: 92%; left: 4%;
+            background: rgba(0,26,51,0.9); padding: 10px; 
             display: flex; gap: 10px; z-index: 1000; 
-            border-top: 1px solid rgba(0,229,255,0.3);
+            border: 1px solid rgba(0,229,255,0.4); border-radius: 35px;
             backdrop-filter: blur(15px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
         #chat-input { 
-            flex: 1; background: rgba(255,255,255,0.1); 
-            border: 1px solid var(--seiryu-blue); border-radius: 25px; 
-            padding: 12px 20px; color: white; outline: none; font-size: 0.95rem;
+            flex: 1; background: transparent; 
+            border: none; padding: 10px 15px; color: white; outline: none; font-size: 1rem;
         }
         .send-btn { 
             background: var(--seiryu-blue); color: var(--deep-blue); 
-            border: none; width: 48px; height: 48px; border-radius: 50%; 
-            font-weight: bold; font-size: 1rem; cursor: pointer;
-            box-shadow: 0 0 10px var(--seiryu-blue);
+            border: none; width: 45px; height: 45px; border-radius: 50%; 
+            font-weight: bold; cursor: pointer;
         }
-
-        /* --- Archive Overlay --- */
-        #archive-overlay { position: fixed; inset: 0; background: rgba(0,26,51,0.98); z-index: 5000; display: none; flex-direction: column; padding: 20px; padding-top: 80px; }
-        .archive-list { flex: 1; overflow-y: auto; }
-        .archive-item { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 15px; margin-bottom: 12px; border-left: 4px solid var(--seiryu-blue); }
     </style>
 </head>
 <body>
 
     <header>
-        <div style="font-weight:bold; font-size:0.9rem; letter-spacing: 1px;">💠 KUKAI GATE</div>
-        <button class="archive-btn" onclick="toggleArchive()">📜 智慧の記録</button>
+        <button class="back-btn" onclick="location.href='index.html'">↩️ Map</button>
+        <div style="font-weight:bold; font-size:0.8rem;">KUKAI RESONANCE</div>
+        <button class="archive-btn" onclick="toggleArchive()">記録</button>
     </header>
 
     <div id="ryuo-view">
@@ -64,8 +61,8 @@
 
         <div class="chat-container" id="chat-box">
             <div class="bubble-ryuo">
-                おかえり、観測者の君。何か新しい「アハ体験」の種は見つかったかな？<br>
-                言葉にすることで、君の中の龍が目を覚ますかもしれないよ。
+                おかえり。何か心に浮かんだ「問い」を投げてごらん。<br>
+                君の言葉が、新しい現実を作る一滴（ひとしずく）になるよ。
             </div>
         </div>
         
@@ -75,60 +72,55 @@
         </div>
     </div>
 
-    <div id="archive-overlay">
-        <h3 style="margin-bottom:20px; color:var(--seiryu-blue); text-align:center;">これまでの智慧の栞</h3>
-        <div class="archive-list" id="archive-list"></div>
-        <button onclick="toggleArchive()" style="background:var(--seiryu-blue); border:none; color:var(--deep-blue); padding:10px; border-radius:20px; width:100%; font-weight:bold; margin-top:20px;">閉じる</button>
-    </div>
-
 <script>
+    // --- Audio System ---
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    let audioCtx;
+
+    function playPichan() {
+        if (!audioCtx) audioCtx = new AudioCtx();
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(1100, now);
+        osc.frequency.exponentialRampToValueAtTime(1700, now + 0.05);
+        gain.gain.setValueAtTime(0.4, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(now + 0.8);
+    }
+
+    // --- Particle System ---
     const canvas = document.getElementById('quantum-canvas');
     const ctx = canvas.getContext('2d');
-    let dialogueHistory = [];
-
     function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
     window.addEventListener('resize', resize);
     resize();
 
-    // 量子的なゆらぎ
     class Particle {
-        constructor() {
-            this.x = Math.random() * canvas.width;
-            this.y = Math.random() * canvas.height;
-            this.size = Math.random() * 1.2;
-            this.speedX = Math.random() * 0.3 - 0.15;
-            this.speedY = Math.random() * 0.3 - 0.15;
-        }
-        update() {
-            this.x += this.speedX; this.y += this.speedY;
-            if (this.x > canvas.width) this.x = 0; if (this.y > canvas.height) this.y = 0;
-        }
-        draw() {
-            ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-            ctx.fillStyle = "rgba(0, 229, 255, 0.3)"; ctx.fill();
-        }
+        constructor() { this.x = Math.random()*canvas.width; this.y = Math.random()*canvas.height; this.s = Math.random()*1.5; }
+        update() { this.x += 0.2; if(this.x > canvas.width) this.x = 0; }
+        draw() { ctx.beginPath(); ctx.arc(this.x, this.y, this.s, 0, Math.PI*2); ctx.fillStyle = "rgba(0, 229, 255, 0.3)"; ctx.fill(); }
     }
-    const particles = Array.from({ length: 40 }, () => new Particle());
-    function animate() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        particles.forEach(p => { p.update(); p.draw(); });
-        requestAnimationFrame(animate);
-    }
+    const particles = Array.from({length:30}, () => new Particle());
+    function animate() { ctx.clearRect(0,0,canvas.width,canvas.height); particles.forEach(p=>{p.update(); p.draw();}); requestAnimationFrame(animate); }
     animate();
 
+    // --- Dialogue Logic ---
     function sendMessage() {
         const input = document.getElementById('chat-input');
         const text = input.value.trim();
         if (!text) return;
 
+        playPichan(); // 送信時のピチャーン！
         addBubble(text, 'user');
         input.value = '';
 
         setTimeout(() => {
             const reply = getKukaiResponse(text);
             addBubble(reply, 'ryuo');
-            saveToArchive(text, reply);
-        }, 1000);
+        }, 1200);
     }
 
     function addBubble(text, type) {
@@ -141,28 +133,8 @@
     }
 
     function getKukaiResponse(input) {
-        if(input.includes("農業") || input.includes("土")) return "土を愛でることは、地球とシンクロすること。君のその手から、新しい可能性の粒が芽吹こうとしているよ。";
-        if(input.includes("人") || input.includes("出会い")) return "人は一人ひとりが波のようなもの。君が動けば波紋が広がり、必ず誰かと共鳴（シンクロ）するはずだよ。";
-        return "その問い、すごくワクワクする響きだね！今はまず、君が感じたその『ゆらぎ』を大切に、一歩踏み出してみようか。";
-    }
-
-    function saveToArchive(q, a) {
-        const now = new Date();
-        const dateStr = `${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${now.getMinutes()}`;
-        dialogueHistory.unshift({ date: dateStr, q: q, a: a });
-        const list = document.getElementById('archive-list');
-        list.innerHTML = dialogueHistory.map(item => `
-            <div class="archive-item">
-                <div style="font-size:0.6rem; color:var(--seiryu-blue);">${item.date}</div>
-                <div style="font-size:0.75rem; margin-top:5px;">問：${item.q}</div>
-                <div style="font-size:0.75rem; color:var(--seiryu-blue); margin-top:5px;">KUKAI：${item.a}</div>
-            </div>
-        `).join('');
-    }
-
-    function toggleArchive() {
-        const overlay = document.getElementById('archive-overlay');
-        overlay.style.display = (overlay.style.display === 'flex') ? 'none' : 'flex';
+        if(input.includes("農業")) return "土を愛でることは、地球とシンクロすること。君が今日感じた土の感触も、大切なエネルギーの交換なんだよ。";
+        return "その問いかけ、とても素敵な響きだね。君が意識を向けることで、未来の可能性が一つに絞り込まれていくんだ。";
     }
 </script>
 </body>
