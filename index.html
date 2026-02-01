@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ENE-LOG - The Perfect Integration</title>
+    <title>ENE-LOG - Ultimate Integration</title>
     <style>
         :root {
             --seiryu-blue: #00e5ff; --deep-blue: #001a33;
             --agri: #4CAF50; --skill: #673AB7; --space: #FF9800; --person: #e91e63;
-            --header-height: 60px; --nav-height: 75px;
+            --header-h: 60px; --nav-h: 75px;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -18,51 +18,51 @@
         #setup-layer { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 9999; display: flex; align-items: center; justify-content: center; color: white; text-align: center; }
         
         header { 
-            position: fixed; top: 0; width: 100%; height: var(--header-height); 
+            position: fixed; top: 0; width: 100%; height: var(--header-h); 
             background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); 
             display: flex; align-items: center; justify-content: space-between; 
             padding: 0 15px; z-index: 3000; border-bottom: 1px solid #ddd;
         }
-
-        .view { display: none; width: 100%; height: calc(100vh - var(--header-height) - var(--nav-height)); margin-top: var(--header-height); position: relative; overflow-y: auto; background: #f0f4f8; }
-        .view.active { display: block; }
-
-        /* --- Map & Table (Stable Layout) --- */
-        #home-view { background: #07192f url('https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&q=80&w=2000') center/cover; }
         .layer-bar { display: flex; gap: 6px; overflow-x: auto; padding: 5px; }
         .layer-chip { padding: 4px 10px; border-radius: 12px; border: 1px solid #ccc; background: white; font-size: 0.6rem; font-weight: bold; cursor: pointer; transition: 0.3s; white-space: nowrap; }
-        .layer-chip.active { color: white; border-color: transparent; }
+        .layer-chip.active { color: white; border-color: transparent; opacity: 1; }
         .c--person.active { background: var(--person); } .c--agri.active { background: var(--agri); } .c--skill.active { background: var(--skill); } .c--space.active { background: var(--space); }
 
+        .view { display: none; width: 100%; height: calc(100vh - var(--header-h) - var(--nav-h)); margin-top: var(--header-h); position: relative; overflow-y: auto; background: #f0f4f8; }
+        .view.active { display: block; }
+
+        /* --- Map & Nodes --- */
+        #home-view { background: #07192f url('https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&q=80&w=2000') center/cover; }
         .node { position: absolute; transform: translate(-50%, -50%); transition: 0.4s; }
-        .node--person { width: 50px; height: 50px; border-radius: 50%; border: 3px solid #fff; background-size: cover; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
-        .node--scale { width: 44px; height: 48px; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); display: flex; align-items: center; justify-content: center; font-size: 18px; color: white; }
+        .node--person { width: 55px; height: 55px; border-radius: 50%; border: 3px solid #fff; background-size: cover; background-position: center; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .node--scale { width: 44px; height: 48px; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); display: flex; align-items: center; justify-content: center; font-size: 18px; color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
         
+        /* --- Table (Side-by-Side) --- */
         .table-container { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 15px; }
         .table-col { background: rgba(255,255,255,0.7); border-radius: 15px; padding: 10px; min-height: 400px; }
         .item-card { background: white; border-radius: 10px; padding: 10px; margin-bottom: 8px; border-left: 4px solid #ccc; font-size: 0.7rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .item-card img { width: 100%; border-radius: 5px; margin-top: 5px; display: block; }
 
-        /* --- KUKAI Dialogue --- */
+        /* --- Ryuo / KUKAI Dialogue --- */
         #ryuo-view { background: radial-gradient(circle at 50% 100%, #002b55 0%, #000 100%); overflow: hidden; display: flex; flex-direction: column; }
         .chat-box { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; padding-bottom: 120px; }
         .bubble-kukai { align-self: flex-start; max-width: 85%; background: rgba(255,255,255,0.1); border: 1px solid rgba(0,229,255,0.3); border-radius: 20px 20px 20px 0; padding: 12px; font-size: 0.85rem; color: white; line-height: 1.6; }
         .bubble-user { align-self: flex-end; max-width: 80%; background: var(--seiryu-blue); color: var(--deep-blue); border-radius: 20px 20px 0 20px; padding: 10px 15px; font-size: 0.85rem; font-weight: bold; }
         .kukai-input-wrapper { position: absolute; bottom: 20px; width: 92%; left: 4%; background: rgba(0,40,80,0.9); border: 1px solid var(--seiryu-blue); border-radius: 40px; padding: 5px; display: flex; gap: 5px; z-index: 4000; backdrop-filter: blur(10px); }
         #kukai-field { flex: 1; background: transparent; border: none; color: white; padding: 10px 15px; outline: none; font-size: 1rem; }
-
-        /* --- Archive Overlay --- */
+        .kukai-btn { background: var(--seiryu-blue); color: var(--deep-blue); border: none; width: 42px; height: 42px; border-radius: 50%; font-weight: bold; cursor: pointer; }
+        
+        /* Archive Overlay */
         #archive-overlay { position: fixed; inset: 0; background: rgba(0,20,40,0.98); z-index: 9000; display: none; flex-direction: column; padding: 80px 20px 20px; }
-        .archive-item { background: rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; margin-bottom: 10px; border-left: 3px solid var(--seiryu-blue); font-size: 0.75rem; color: white; }
+        .archive-item { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 10px; margin-bottom: 10px; border-left: 3px solid var(--seiryu-blue); font-size: 0.75rem; color: #ccc; }
 
         /* --- Brave Gate --- */
         #gate-view { background: #000; position: fixed; inset: 0; z-index: 5000; display: none; }
         video { width: 100%; height: 100%; object-fit: cover; }
         #particle-canvas { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
         .kanji-word { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 100px; color: white; text-shadow: 0 0 20px var(--seiryu-blue); opacity: 0; z-index: 10; pointer-events: none; transition: opacity 0.8s ease-out; }
-        @keyframes kanjiResonance { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); } 20% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); } 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
 
-        /* --- Shared UI --- */
+        /* --- Navigation & Modal --- */
         nav { position: fixed; bottom: 0; width: 100%; height: var(--nav-height); background: var(--deep-blue); display: flex; align-items: center; z-index: 4000; padding-bottom: 10px; }
         .nav-btn { flex: 1; color: white; border: none; background: none; display: flex; flex-direction: column; align-items: center; font-size: 0.6rem; opacity: 0.4; }
         .nav-btn.active { opacity: 1; color: var(--seiryu-blue); }
@@ -89,7 +89,6 @@
 
     <div id="modal">
         <div class="modal-inner">
-            <h3 style="text-align:center; font-size:0.9rem; margin-bottom:15px;">共鳴を記録する</h3>
             <div class="mode-switch">
                 <button id="mode-give" onclick="setMode('give')" class="mode-btn active">🥘 持ち寄り</button>
                 <button id="mode-want" onclick="setMode('want')" class="mode-btn">🍽 リクエスト</button>
@@ -105,20 +104,25 @@
                 <input type="file" id="photo-input" accept="image/*" style="display:none" onchange="previewPhoto(this)">
                 <img id="photo-preview">
             </div>
-            <input type="text" id="m-title" placeholder="タイトル"><textarea id="m-desc" rows="2" placeholder="詳細"></textarea>
-            <button onclick="saveData()" style="width:100%; padding:15px; background:var(--deep-blue); color:white; border-radius:30px; font-weight:bold;">テーブルへ置く</button>
+            <input type="text" id="m-title" placeholder="タイトル">
+            <textarea id="m-desc" rows="2" placeholder="想いを記入..."></textarea>
+            <button onclick="saveData()" style="width:100%; padding:15px; background:var(--deep-blue); color:white; border:none; border-radius:30px; font-weight:bold;">テーブルへ置く</button>
             <button onclick="closeModal()" style="width:100%; background:none; border:none; color:#999; margin-top:10px;">閉じる</button>
         </div>
     </div>
 
     <header id="main-header">
-        <div style="font-weight:bold; font-size:0.6rem; margin-left:10px; color:#333;">💠 ENE-LOG</div>
-        <button id="archive-btn" style="display:none; background:none; border:1px solid var(--seiryu-blue); color:var(--seiryu-blue); padding:4px 10px; border-radius:15px; font-size:0.6rem;" onclick="toggleArchive()">📜 記録</button>
-        <div class="layer-bar">
-            <div class="layer-chip active c--person" onclick="toggleLayer('person', this)">👤 人</div>
-            <div class="layer-chip active c--agri" onclick="toggleLayer('agri', this)">🌱 農</div>
-            <div class="layer-chip active c--skill" onclick="toggleLayer('skill', this)">💡 智慧</div>
-            <div class="layer-chip active c--space" onclick="toggleLayer('space', this)">🏠 場</div>
+        <div style="display:flex; align-items:center;">
+            <div style="font-weight:bold; font-size:0.6rem; margin-left:10px; color:#333;">💠 ENE-LOG</div>
+        </div>
+        <div id="header-actions" style="display:flex; align-items:center; gap:10px;">
+            <button id="record-btn" onclick="toggleArchive()" style="display:none; background:none; border:1px solid var(--seiryu-blue); color:var(--seiryu-blue); padding:4px 10px; border-radius:15px; font-size:0.6rem;">📜 記録</button>
+            <div class="layer-bar" id="layer-chips">
+                <div class="layer-chip active c--person" onclick="toggleLayer('person', this)">👤</div>
+                <div class="layer-chip active c--agri" onclick="toggleLayer('agri', this)">🌱</div>
+                <div class="layer-chip active c--skill" onclick="toggleLayer('skill', this)">💡</div>
+                <div class="layer-chip active c--space" onclick="toggleLayer('space', this)">🏠</div>
+            </div>
         </div>
     </header>
 
@@ -126,32 +130,32 @@
     
     <div id="table-view" class="view">
         <div class="table-container">
-            <div class="table-col"><strong>🥘 持ち寄り</strong><div id="off-list"></div></div>
-            <div class="table-col"><strong>🍽 リクエスト</strong><div id="req-list"></div></div>
+            <div class="table-col"><div style="font-size:0.7rem; font-weight:bold; border-bottom:1px solid #ddd;">🥘 持ち寄り</div><div id="off-list"></div></div>
+            <div class="table-col"><div style="font-size:0.7rem; font-weight:bold; border-bottom:1px solid #ddd;">🍽 リクエスト</div><div id="req-list"></div></div>
         </div>
     </div>
 
     <div id="ryuo-view" class="view">
         <div class="chat-box" id="kukai-chat">
-            <div class="bubble-kukai">やあ。今日はどんなアハ体験があったかな？</div>
+            <div class="bubble-kukai">やあ、観測者の君。今日はどんなアハ体験があったかな？</div>
         </div>
         <div class="kukai-input-wrapper">
             <button onclick="drawLucky()" style="background:none; border:none; color:var(--seiryu-blue); padding:0 10px; font-size:0.7rem; font-weight:bold;">占</button>
             <input type="text" id="kukai-field" placeholder="KUKAIに問いかける..." onkeypress="if(event.key==='Enter') sendKukai()">
-            <button onclick="sendKukai()" style="background:var(--seiryu-blue); border:none; width:40px; height:40px; border-radius:50%; font-weight:bold;">問</button>
+            <button class="kukai-btn" onclick="sendKukai()">問</button>
         </div>
     </div>
 
     <div id="archive-overlay">
         <h3 style="color:var(--seiryu-blue); text-align:center; margin-bottom:20px;">智慧の記録</h3>
-        <div id="arch-list" style="flex:1; overflow-y:auto;"></div>
-        <button onclick="toggleArchive()" style="background:var(--seiryu-blue); border:none; width:100%; padding:15px; border-radius:30px; font-weight:bold; color:var(--deep-blue); margin-top:15px;">閉じる</button>
+        <div id="archive-list" style="flex:1; overflow-y:auto;"></div>
+        <button onclick="toggleArchive()" style="background:var(--seiryu-blue); border:none; color:var(--deep-blue); width:100%; padding:15px; border-radius:30px; font-weight:bold; margin-top:15px;">閉じる</button>
     </div>
 
     <div id="gate-view">
         <video id="webcam" autoplay playsinline muted></video>
         <canvas id="particle-canvas"></canvas>
-        <div style="position:absolute; top:30px; left:20px; color:white; border:1px solid var(--seiryu-blue); padding:5px 15px; border-radius:20px; font-size:0.7rem;" onclick="switchView('home-view', document.getElementById('map-nav-btn'))">↩️ Map</div>
+        <div style="position:absolute; top:30px; left:20px; color:white; border:1px solid var(--seiryu-blue); padding:5px 15px; border-radius:20px; font-size:0.7rem;" onclick="forceReturnToMap()">↩️ Map</div>
         <div id="kanji-output" class="kanji-word"></div>
         <div style="position:absolute; bottom:50px; left:50%; transform:translateX(-50%); width:80px; height:80px; border-radius:50%; border:5px solid #fff; background:rgba(255,255,255,0.2); z-index:6000;" onclick="observe()"></div>
     </div>
@@ -166,17 +170,13 @@
     </nav>
 
 <script>
-    let audioCtx, isObserving = false, mCat = 'person', mIcon = '👤', mMode = 'give', mImg = null, activeLayers = ['person', 'agri', 'skill', 'space'], historyData = [];
+    let audioCtx, isObs = false, mCat = 'person', mIcon = '👤', mMode = 'give', mImg = null, activeL = ['person', 'agri', 'skill', 'space'], historyData = [];
     let db = [
         { type:'person', icon:'👤', title:'茂谷 幸弘', x:25, y:35, mode:'give', img:'https://i.pravatar.cc/150?u=shige', desc:'Table案内人' },
         { type:'agri', icon:'🌱', title:'納豆菌実験', x:60, y:50, mode:'want', desc:'協力求む' }
     ];
 
-    function initApp() {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        document.getElementById('setup-layer').style.display = 'none';
-        render();
-    }
+    function initApp() { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); document.getElementById('setup-layer').style.display = 'none'; render(); }
 
     function switchView(id, btn) {
         const s = document.getElementById('webcam').srcObject; if(s) s.getTracks().forEach(t=>t.stop());
@@ -185,71 +185,84 @@
         document.getElementById(id).classList.add('active');
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
+        // KUKAIのときだけ「記録」ボタンを出す。Map/TableのときはFABとレイヤー。
+        document.getElementById('record-btn').style.display = (id === 'ryuo-view') ? 'block' : 'none';
+        document.getElementById('layer-chips').style.display = (id === 'home-view') ? 'flex' : 'none';
         document.getElementById('main-fab').style.display = (id === 'ryuo-view') ? 'none' : 'flex';
-        document.getElementById('archive-btn').style.display = (id === 'ryuo-view') ? 'block' : 'none';
         if(id === 'home-view' || id === 'table-view') render();
     }
+    function forceReturnToMap() { switchView('home-view', document.getElementById('map-nav-btn')); }
 
+    function playP() {
+        const n=audioCtx.currentTime, o=audioCtx.createOscillator(), g=audioCtx.createGain();
+        o.type='sine'; o.frequency.setValueAtTime(1100,n); o.frequency.exponentialRampToValueAtTime(1700,n+0.05);
+        g.gain.setValueAtTime(0.4,n); g.gain.exponentialRampToValueAtTime(0.001,n+0.8);
+        o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(n+0.8);
+    }
+
+    // Modal Logic
     function openModal() { document.getElementById('modal').style.display = 'flex'; }
     function closeModal() { document.getElementById('modal').style.display = 'none'; mImg = null; document.getElementById('photo-preview').style.display = 'none'; document.getElementById('upload-label').style.display = 'block'; }
     function setMode(m) { mMode = m; document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active')); document.getElementById('mode-'+m).classList.add('active'); }
     function setSphere(c, i) { mCat = c; mIcon = i; document.querySelectorAll('.sphere-btn').forEach(b => b.classList.remove('selected')); document.getElementById('s-'+c).classList.add('selected'); }
     function previewPhoto(i) { if (i.files && i.files[0]) { const r = new FileReader(); r.onload = e => { mImg = e.target.result; const p = document.getElementById('photo-preview'); p.src = mImg; p.style.display = 'block'; document.getElementById('upload-label').style.display = 'none'; }; r.readAsDataURL(i.files[0]); } }
-    function saveData() { const t = document.getElementById('m-title').value; if(!t) return alert("タイトルを入力してください"); db.unshift({ type:mCat, icon:mIcon, title:t, desc:document.getElementById('m-desc').value, mode:mMode, img:mImg, x:20+Math.random()*60, y:20+Math.random()*60 }); document.getElementById('m-title').value=''; document.getElementById('m-desc').value=''; closeModal(); render(); }
-    function toggleLayer(t, b) { if(activeLayers.includes(t)) activeLayers = activeLayers.filter(l=>l!==t); else activeLayers.push(t); b.classList.toggle('active'); render(); }
+    function saveData() { const t = document.getElementById('m-title').value; if(!t) return alert("タイトルを入力してください"); db.unshift({ type:mCat, icon:mIcon, title:t, desc:document.getElementById('m-desc').value, mode:mMode, img:mImg, x:20+Math.random()*60, y:20+Math.random()*60 }); closeModal(); render(); }
+    function toggleLayer(t, b) { if(activeL.includes(t)) activeL = activeL.filter(l=>l!==t); else activeL.push(t); b.classList.toggle('active'); render(); }
 
     function render() {
-        const m = document.getElementById('map-area'); m.innerHTML = '';
-        const o = document.getElementById('off-list'); o.innerHTML = '';
-        const r = document.getElementById('req-list'); r.innerHTML = '';
-        db.filter(i => activeLayers.includes(i.type)).forEach(i => {
+        const m = document.getElementById('map-area'); if(m) m.innerHTML = '';
+        const o = document.getElementById('off-list'); if(o) o.innerHTML = '';
+        const r = document.getElementById('req-list'); if(r) r.innerHTML = '';
+        db.filter(i => activeL.includes(i.type)).forEach(i => {
             const el = document.createElement('div');
             el.className = (i.type === 'person' && i.img) ? 'node node--person' : `node node--scale node--${i.type}`;
             if(i.type === 'person' && i.img) el.style.backgroundImage = `url('${i.img}')`; else el.innerHTML = i.icon;
-            el.style.top = i.y + '%'; el.style.left = i.x + '%'; m.appendChild(el);
+            if(i.type !== 'person') el.style.background = `var(--${i.type})`;
+            el.style.top = i.y + '%'; el.style.left = i.x + '%'; if(m) m.appendChild(el);
             const card = document.createElement('div'); card.className = 'item-card'; card.style.borderLeftColor = `var(--${i.type})`;
             card.innerHTML = `<strong>${i.icon} ${i.title}</strong><br>${i.desc || ''}${i.img ? `<img src="${i.img}">` : ''}`;
-            if(i.mode === 'give') o.appendChild(card); else r.appendChild(card);
+            if(i.mode === 'give') { if(o) o.appendChild(card); } else { if(r) r.appendChild(card); }
         });
     }
 
+    // KUKAI Dialogue
     function sendKukai() {
-        const field = document.getElementById('kukai-field'); const text = field.value.trim(); if(!text) return;
-        addChat(text, 'user'); field.value = '';
+        const field = document.getElementById('kukai-field'), text = field.value.trim(); if(!text) return;
+        playP(); addChat(text, 'user'); field.value = '';
         setTimeout(() => { 
             const reply = "その問いかけ、すごくワクワクするね！新しい可能性が形になろうとしているよ。";
             addChat(reply, 'kukai');
             historyData.unshift({ q: text, a: reply, d: new Date().toLocaleTimeString() });
-        }, 1200);
+            updateArchive();
+        }, 1000);
     }
     function addChat(t, type) {
-        const box = document.getElementById('kukai-chat'); const d = document.createElement('div');
+        const box = document.getElementById('kukai-chat'), d = document.createElement('div');
         d.className = type === 'user' ? 'bubble-user' : 'bubble-kukai'; d.innerText = t; box.appendChild(d); box.scrollTop = box.scrollHeight;
     }
-    function toggleArchive() {
-        const overlay = document.getElementById('archive-overlay');
-        overlay.style.display = (overlay.style.display === 'flex') ? 'none' : 'flex';
-        document.getElementById('arch-list').innerHTML = historyData.map(h => `<div class="archive-item"><div style="font-size:0.5rem; color:var(--seiryu-blue);">${h.d}</div>問: ${h.q}<br>答: ${h.a}</div>`).join('');
+    function drawLucky() { playP(); addChat("今日の君のラッキーエナジーは…「"+['人 👤','農 🌱','智慧 💡','場 🏠'][Math.floor(Math.random()*4)]+"」だよ！", 'kukai'); }
+    function toggleArchive() { const o = document.getElementById('archive-overlay'); o.style.display = (o.style.display === 'flex') ? 'none' : 'flex'; }
+    function updateArchive() {
+        const list = document.getElementById('archive-list');
+        list.innerHTML = historyData.map(h => `<div class="archive-item"><div style="color:var(--seiryu-blue); font-size:0.5rem;">${h.d}</div>問: ${h.q}<br>答: ${h.a}</div>`).join('');
     }
-    function drawLucky() { addChat("今日の君のラッキーエナジーは…「"+['人 👤','農 🌱','智慧 💡','場 🏠'][Math.floor(Math.random()*4)]+"」だよ！", 'kukai'); }
 
+    // Gate Logic
     async function enterGate() {
         document.getElementById('gate-view').style.display = 'block';
         const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-        document.getElementById('webcam').srcObject = s; 
-        const c = document.getElementById('particle-canvas'); c.width = window.innerWidth; c.height = window.innerHeight;
+        document.getElementById('webcam').srcObject = s; canvas.width = window.innerWidth; canvas.height = window.innerHeight;
     }
-
+    const canvas = document.getElementById('particle-canvas'), ctx = canvas.getContext('2d'); let particles = [];
+    class Part { constructor(a, rs) { this.a = a; this.r = 0; this.rs = rs; this.l = 1.0; } update() { this.a += 0.25; this.r += this.rs; this.l -= 0.015; } draw() { ctx.beginPath(); ctx.arc(canvas.width/2 + Math.cos(this.a)*this.r, canvas.height/2 + Math.sin(this.a)*this.r, 2.5, 0, Math.PI*2); ctx.fillStyle = `hsla(185, 100%, 75%, ${this.l})`; ctx.fill(); } }
+    function animate() { ctx.clearRect(0,0,canvas.width,canvas.height); particles = particles.filter(p=>p.l>0); particles.forEach(p=>{ p.update(); p.draw(); }); if(particles.length > 0) requestAnimationFrame(animate); }
     function observe() {
-        if(isObserving) return; isObserving = true;
-        for(let i=0; i<80; i++) setTimeout(() => { particles.push(new Particle(i*0.2, 3+Math.random()*2)); if(i===0) animate(); }, i*8);
+        if(isObs) return; isObs = true; playP();
+        for(let i=0; i<80; i++) setTimeout(() => { particles.push(new Part(i*0.2, 3+Math.random()*2)); if(i===0) animate(); }, i*8);
         const k = document.getElementById('kanji-output'); k.innerText = ["龍", "響", "生", "耕", "結", "開"][Math.floor(Math.random()*6)];
         k.style.animation = 'kanjiResonance 1s forwards'; k.style.opacity = '1';
-        setTimeout(() => {
-            k.style.opacity = '0';
-            setTimeout(() => { k.innerText = ""; k.style.animation = 'none'; isObserving = false; }, 800);
-        }, 1200);
+        setTimeout(() => { k.style.opacity = '0'; setTimeout(() => { k.innerText = ""; isObs = false; }, 800); }, 1200);
     }
-    const canvas = document.getElementById('particle-canvas'); const ctx = canvas.getContext('2d'); let particles = [];
-    class Particle { constructor(a, rs) { this.a = a; this.r = 0; this.rs = rs; this.l = 1.0; } update() { this.a += 0.25; this.r += this.rs; this.l -= 0.015; } draw() { ctx.beginPath(); ctx.arc(canvas.width/2 + Math.cos(this.a)*this.r, canvas.height/2 + Math.sin(this.a)*this.r, 2.5, 0, Math.PI*2); ctx.fillStyle = `hsla(185, 100%, 75%, ${this.l})`; ctx.fill(); } }
-    function animate() { ctx.clearRect(0,0,canvas.width,canvas.height); particles
+</script>
+</body>
+</html>
