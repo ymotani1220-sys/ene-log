@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ENE-LOG - Ultimate Integration</title>
+    <title>ENE-LOG - Perfect Reset Edition</title>
     <style>
         :root {
             --seiryu-blue: #00e5ff;
@@ -45,7 +45,6 @@
         video { width: 100%; height: 100%; object-fit: cover; }
         #particle-canvas { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
         
-        /* 戻るボタン */
         .back-btn { 
             position: absolute; top: 30px; left: 20px; z-index: 6000; 
             background: rgba(0,0,0,0.5); color: white; border: 1px solid var(--seiryu-blue);
@@ -53,15 +52,17 @@
             backdrop-filter: blur(5px);
         }
 
-        .kanji-word { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 100px; color: white; text-shadow: 0 0 20px var(--seiryu-blue); opacity: 0; z-index: 10; pointer-events: none; }
+        /* 漢字表示エリア（ここをリセット対象にする） */
+        #kotodama-container { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 10; pointer-events: none; text-align: center; }
+        .kanji-word { font-size: 100px; color: white; text-shadow: 0 0 20px var(--seiryu-blue); opacity: 0; z-index: 10; pointer-events: none; }
+        
         @keyframes kanjiResonance {
-            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
-            20% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
-            80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-            100% { opacity: 0; transform: translate(-50%, -50%) scale(1.4); }
+            0% { opacity: 0; transform: scale(0.5); filter: blur(10px); }
+            20% { opacity: 1; transform: scale(1.1); filter: blur(0); }
+            80% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(1.4); filter: blur(15px); }
         }
 
-        /* Shutter & Alerts */
         .shutter-btn { position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%); width: 80px; height: 80px; border-radius: 50%; border: 5px solid #fff; background: rgba(255,255,255,0.2); z-index: 6000; }
         #custom-alert { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 280px; background: rgba(0,26,51,0.95); border: 2px solid var(--seiryu-blue); border-radius: 20px; padding: 25px; color: white; text-align: center; z-index: 7000; display: none; }
 
@@ -69,7 +70,6 @@
         nav { position: fixed; bottom: 0; width: 100%; height: var(--nav-height); background: var(--deep-blue); display: flex; align-items: center; z-index: 4000; padding-bottom: 10px; }
         .nav-btn { flex: 1; color: white; border: none; background: none; display: flex; flex-direction: column; align-items: center; font-size: 0.65rem; opacity: 0.5; }
         .nav-btn.active { opacity: 1; color: var(--seiryu-blue); }
-        .fab { position: fixed; bottom: 95px; right: 20px; width: 60px; height: 60px; background: var(--seiryu-blue); border-radius: 50%; border: none; font-size: 30px; z-index: 3500; }
         
         #setup-layer { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 9999; display: flex; align-items: center; justify-content: center; color: white; text-align: center; }
     </style>
@@ -88,11 +88,6 @@
 
     <header id="main-header">
         <div style="font-weight:bold; font-size:0.8rem;">💠 ENE-LOG</div>
-        <div class="layer-bar">
-            <div class="layer-chip" style="background:var(--person); color:white;">👤</div>
-            <div class="layer-chip" style="background:var(--agri); color:white;">🌱</div>
-            <div class="layer-chip" style="background:var(--skill); color:white;">💡</div>
-        </div>
     </header>
 
     <div id="home-view" class="view active">
@@ -110,7 +105,7 @@
         <video id="webcam" autoplay playsinline muted></video>
         <canvas id="particle-canvas"></canvas>
         <div class="back-btn" onclick="exitGate()">↩️ Map</div>
-        <div id="kotodama-container"><div id="kanji-output" class="kanji-word">龍</div></div>
+        <div id="kotodama-container"><div id="kanji-output" class="kanji-word"></div></div>
         <div class="shutter-btn" onclick="observe()"></div>
     </div>
 
@@ -135,26 +130,45 @@
     }
 
     function switchView(id, btn) {
+        // 画面切替時にも念のため漢字を消す
+        resetKanji();
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
         document.getElementById(id).classList.add('active');
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
+        if(btn) btn.classList.add('active');
     }
 
     async function enterGate() {
+        // Gateに入る前に前回の漢字をリセット
+        resetKanji();
         document.getElementById('gate-view').style.display = 'block';
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-        document.getElementById('webcam').srcObject = stream;
-        resize();
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+            document.getElementById('webcam').srcObject = stream;
+            resize();
+        } catch(e) { alert("カメラが起動できません"); }
     }
 
     function exitGate() {
+        // Mapに戻る時に漢字をリセット
+        resetKanji();
         document.getElementById('gate-view').style.display = 'none';
         const stream = document.getElementById('webcam').srcObject;
         if (stream) stream.getTracks().forEach(t => t.stop());
     }
 
+    // --- 漢字を物理的に消去する関数 ---
+    function resetKanji() {
+        const kOut = document.getElementById('kanji-output');
+        kOut.style.animation = 'none';
+        kOut.style.opacity = '0';
+        kOut.innerText = '';
+        particles = []; // パーティクルもクリア
+        if(ctx) ctx.clearRect(0,0,canvas.width,canvas.height);
+    }
+
     function playSound(freq, type, dur) {
+        if(!audioCtx) return;
         const now = audioCtx.currentTime;
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
@@ -186,11 +200,12 @@
     }
 
     function observe() {
+        resetKanji(); // 撮影開始時に一度リセット
         playSound(200, 'triangle', 2.5);
         for(let i=0; i<80; i++) setTimeout(() => { particles.push(new Particle(i*0.2, 3+Math.random()*2)); if(i===0) animate(); }, i*8);
         const kOut = document.getElementById('kanji-output');
-        kOut.innerText = ["龍", "響", "生", "耕", "結"][Math.floor(Math.random()*5)];
-        kOut.style.animation = 'none'; void kOut.offsetWidth; kOut.style.animation = 'kanjiResonance 2.8s forwards';
+        kOut.innerText = ["龍", "響", "生", "耕", "結", "開"][Math.floor(Math.random()*6)];
+        kOut.style.animation = 'kanjiResonance 2.8s forwards';
         setTimeout(() => { playSound(1200, 'sine', 0.8); document.getElementById('custom-alert').style.display = 'block'; }, 2200);
     }
 
@@ -214,7 +229,7 @@
         db.forEach(item => {
             const card = document.createElement('div'); card.className = 'item-card';
             card.style.borderLeftColor = `var(--${item.type})`;
-            card.innerHTML = `<strong>${item.icon} ${item.title}</strong>`;
+            card.innerHTML = `<strong>${item.title}</strong>`;
             offL.appendChild(card);
         });
     }
