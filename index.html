@@ -3,15 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ENE-LOG - Perfect Reset Edition</title>
+    <title>ENE-LOG - Auto Fade & Map Return</title>
     <style>
         :root {
             --seiryu-blue: #00e5ff;
             --deep-blue: #001a33;
             --agri: #4CAF50;
-            --skill: #673AB7;
-            --space: #FF9800;
-            --person: #e91e63;
             --header-height: 60px;
             --nav-height: 75px;
         }
@@ -26,22 +23,13 @@
             display: flex; align-items: center; justify-content: space-between; 
             padding: 0 15px; z-index: 3000; border-bottom: 1px solid #ddd;
         }
-        .view { display: none; width: 100%; height: calc(100vh - var(--header-height) - var(--nav-height)); margin-top: var(--header-height); position: relative; overflow-y: auto; background: #f0f4f8; }
+        .view { display: none; width: 100%; height: calc(100vh - var(--header-height) - var(--nav-height)); margin-top: var(--header-height); position: relative; background: #f0f4f8; }
         .view.active { display: block; }
 
-        /* --- Map & Table --- */
         #home-view { background: #07192f url('https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&q=80&w=2000') center/cover; }
-        .node { position: absolute; transform: translate(-50%, -50%); transition: 0.3s; }
-        .node--person { width: 50px; height: 50px; border-radius: 50%; border: 3px solid #fff; background-size: cover; }
-        .node--scale { width: 44px; height: 48px; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); display: flex; align-items: center; justify-content: center; font-size: 18px; color: white; }
-        .node--agri { background: var(--agri); } .node--skill { background: var(--skill); } .node--space { background: var(--space); }
-
-        .table-container { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
-        .table-col { background: rgba(255,255,255,0.7); border-radius: 15px; padding: 10px; min-height: 200px; }
-        .item-card { background: white; border-radius: 10px; padding: 10px; margin-bottom: 8px; border-left: 4px solid #ccc; font-size: 0.7rem; }
 
         /* --- Brave Gate (AR) --- */
-        #gate-view { background: #000; margin: 0; height: 100vh; width: 100%; position: fixed; top: 0; z-index: 5000; }
+        #gate-view { background: #000; margin: 0; height: 100vh; width: 100%; position: fixed; top: 0; z-index: 5000; display: none; }
         video { width: 100%; height: 100%; object-fit: cover; }
         #particle-canvas { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
         
@@ -49,12 +37,10 @@
             position: absolute; top: 30px; left: 20px; z-index: 6000; 
             background: rgba(0,0,0,0.5); color: white; border: 1px solid var(--seiryu-blue);
             padding: 10px 15px; border-radius: 20px; font-weight: bold; font-size: 0.8rem;
-            backdrop-filter: blur(5px);
         }
 
-        /* 漢字表示エリア（ここをリセット対象にする） */
-        #kotodama-container { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 10; pointer-events: none; text-align: center; }
-        .kanji-word { font-size: 100px; color: white; text-shadow: 0 0 20px var(--seiryu-blue); opacity: 0; z-index: 10; pointer-events: none; }
+        #kotodama-container { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 10; pointer-events: none; }
+        .kanji-word { font-size: 100px; color: white; text-shadow: 0 0 20px var(--seiryu-blue); opacity: 0; }
         
         @keyframes kanjiResonance {
             0% { opacity: 0; transform: scale(0.5); filter: blur(10px); }
@@ -63,8 +49,17 @@
             100% { opacity: 0; transform: scale(1.4); filter: blur(15px); }
         }
 
+        /* 独自メッセージ（オートフェード対応） */
+        #custom-alert {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 280px; background: rgba(0, 26, 51, 0.95);
+            border: 2px solid var(--seiryu-blue); border-radius: 20px;
+            padding: 25px; color: white; text-align: center;
+            z-index: 7000; display: none; opacity: 0; transition: opacity 0.5s;
+            backdrop-filter: blur(15px);
+        }
+
         .shutter-btn { position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%); width: 80px; height: 80px; border-radius: 50%; border: 5px solid #fff; background: rgba(255,255,255,0.2); z-index: 6000; }
-        #custom-alert { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 280px; background: rgba(0,26,51,0.95); border: 2px solid var(--seiryu-blue); border-radius: 20px; padding: 25px; color: white; text-align: center; z-index: 7000; display: none; }
 
         /* --- Global Nav --- */
         nav { position: fixed; bottom: 0; width: 100%; height: var(--nav-height); background: var(--deep-blue); display: flex; align-items: center; z-index: 4000; padding-bottom: 10px; }
@@ -83,7 +78,6 @@
     <div id="custom-alert">
         <h3 style="color:var(--seiryu-blue);">ピチャーン！</h3>
         <p>新しい智慧を観測しました。</p>
-        <button onclick="closeAlert()" style="background:var(--seiryu-blue); border:none; padding:10px 30px; border-radius:20px; margin-top:15px; font-weight:bold;">Tableへ戻る</button>
     </div>
 
     <header id="main-header">
@@ -95,76 +89,82 @@
     </div>
 
     <div id="table-view" class="view">
-        <div class="table-container">
-            <div class="table-col"><div style="font-size:0.7rem; font-weight:bold; margin-bottom:10px;">🥘 持ち寄る</div><div id="off-list"></div></div>
-            <div class="table-col"><div style="font-size:0.7rem; font-weight:bold; margin-bottom:10px;">🍽 リクエスト</div><div id="req-list"></div></div>
-        </div>
+        <div style="padding:20px; text-align:center;">Table Data Loading...</div>
     </div>
 
-    <div id="gate-view" style="display:none;">
+    <div id="gate-view">
         <video id="webcam" autoplay playsinline muted></video>
         <canvas id="particle-canvas"></canvas>
-        <div class="back-btn" onclick="exitGate()">↩️ Map</div>
+        <div class="back-btn" onclick="forceReturnToMap()">↩️ Map</div>
         <div id="kotodama-container"><div id="kanji-output" class="kanji-word"></div></div>
         <div class="shutter-btn" onclick="observe()"></div>
     </div>
 
     <nav id="main-nav">
-        <button class="nav-btn active" onclick="switchView('home-view', this)">🗺<span>Map</span></button>
+        <button class="nav-btn active" id="map-nav-btn" onclick="forceReturnToMap()">🗺<span>Map</span></button>
         <button class="nav-btn" onclick="switchView('table-view', this)">🥘<span>Table</span></button>
         <button class="nav-btn" onclick="enterGate()">⛩<span>Gate</span></button>
     </nav>
 
 <script>
     let audioCtx;
-    let db = [
-        { type:'person', trade:'offering', icon:'👤', title:'茂谷 幸弘', x:25, y:35, img:'https://i.pravatar.cc/150?u=shige' },
-        { type:'agri', trade:'offering', icon:'🌱', title:'納豆菌実験', x:60, y:50 }
-    ];
+    let isObserving = false;
 
     function setupAudio() {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         audioCtx = new AudioContext();
         document.getElementById('setup-layer').style.display = 'none';
-        render();
+    }
+
+    // 必ずマップに戻るための関数
+    function forceReturnToMap() {
+        // 全ての状態をリセット
+        closeGate();
+        closeAlert();
+        resetKanji();
+        
+        // 画面切り替え
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.getElementById('home-view').classList.add('active');
+        
+        // ナビボタンのハイライトをMapに強制
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('map-nav-btn').classList.add('active');
     }
 
     function switchView(id, btn) {
-        // 画面切替時にも念のため漢字を消す
-        resetKanji();
+        if (id === 'home-view') { forceReturnToMap(); return; }
+        closeGate();
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
         document.getElementById(id).classList.add('active');
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        if(btn) btn.classList.add('active');
+        btn.classList.add('active');
     }
 
     async function enterGate() {
-        // Gateに入る前に前回の漢字をリセット
         resetKanji();
         document.getElementById('gate-view').style.display = 'block';
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
             document.getElementById('webcam').srcObject = stream;
             resize();
-        } catch(e) { alert("カメラが起動できません"); }
+        } catch(e) { console.error(e); }
     }
 
-    function exitGate() {
-        // Mapに戻る時に漢字をリセット
-        resetKanji();
+    function closeGate() {
         document.getElementById('gate-view').style.display = 'none';
         const stream = document.getElementById('webcam').srcObject;
         if (stream) stream.getTracks().forEach(t => t.stop());
     }
 
-    // --- 漢字を物理的に消去する関数 ---
     function resetKanji() {
         const kOut = document.getElementById('kanji-output');
         kOut.style.animation = 'none';
         kOut.style.opacity = '0';
         kOut.innerText = '';
-        particles = []; // パーティクルもクリア
+        particles = [];
         if(ctx) ctx.clearRect(0,0,canvas.width,canvas.height);
+        isObserving = false;
     }
 
     function playSound(freq, type, dur) {
@@ -187,7 +187,7 @@
         constructor(a, rs) { this.a = a; this.r = 0; this.rs = rs; this.l = 1.0; }
         update() { this.a += 0.25; this.r += this.rs; this.l -= 0.015; }
         draw() {
-            ctx.beginPath(); ctx.arc(canvas.width/2 + Math.cos(this.a)*this.r, canvas.height/2 + Math.sin(this.a)*this.r, 2.5, 0, Math.PI*2);
+            ctx.beginPath(); ctx.arc(canvas.width/2 + Math.cos(this.a)*this.r, canvas.height/2 + Math.sin(this.a)*this.r, 3, 0, Math.PI*2);
             ctx.fillStyle = `hsla(185, 100%, 75%, ${this.l})`; ctx.fill();
         }
     }
@@ -200,38 +200,38 @@
     }
 
     function observe() {
-        resetKanji(); // 撮影開始時に一度リセット
+        if(isObserving) return;
+        isObserving = true;
         playSound(200, 'triangle', 2.5);
         for(let i=0; i<80; i++) setTimeout(() => { particles.push(new Particle(i*0.2, 3+Math.random()*2)); if(i===0) animate(); }, i*8);
         const kOut = document.getElementById('kanji-output');
         kOut.innerText = ["龍", "響", "生", "耕", "結", "開"][Math.floor(Math.random()*6)];
         kOut.style.animation = 'kanjiResonance 2.8s forwards';
-        setTimeout(() => { playSound(1200, 'sine', 0.8); document.getElementById('custom-alert').style.display = 'block'; }, 2200);
+        
+        setTimeout(() => { 
+            playSound(1200, 'sine', 0.8); 
+            showAutoAlert();
+        }, 2200);
+    }
+
+    function showAutoAlert() {
+        const alertBox = document.getElementById('custom-alert');
+        alertBox.style.display = 'block';
+        setTimeout(() => { alertBox.style.opacity = '1'; }, 10);
+        
+        // 2秒後に自動で消す
+        setTimeout(() => {
+            closeAlert();
+        }, 2000);
     }
 
     function closeAlert() {
-        document.getElementById('custom-alert').style.display = 'none';
-        exitGate();
-        switchView('table-view', document.querySelectorAll('.nav-btn')[1]);
-    }
-
-    function render() {
-        const map = document.getElementById('map-area'); map.innerHTML = '';
-        db.forEach(item => {
-            const el = document.createElement('div');
-            el.className = item.type === 'person' ? 'node node--person' : `node node--scale node--${item.type}`;
-            if(item.type === 'person') el.style.backgroundImage = `url('${item.img}')`;
-            else el.innerHTML = item.icon;
-            el.style.top = item.y + '%'; el.style.left = item.x + '%';
-            map.appendChild(el);
-        });
-        const offL = document.getElementById('off-list'); offL.innerHTML = '';
-        db.forEach(item => {
-            const card = document.createElement('div'); card.className = 'item-card';
-            card.style.borderLeftColor = `var(--${item.type})`;
-            card.innerHTML = `<strong>${item.title}</strong>`;
-            offL.appendChild(card);
-        });
+        const alertBox = document.getElementById('custom-alert');
+        alertBox.style.opacity = '0';
+        setTimeout(() => { 
+            alertBox.style.display = 'none'; 
+            isObserving = false; // 次の観測を可能にする
+        }, 500);
     }
 </script>
 </body>
