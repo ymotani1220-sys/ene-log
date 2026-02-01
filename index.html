@@ -3,82 +3,114 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Brave Gate - Seiryu Sound</title>
+    <title>Brave Gate - iOS Sound Fix</title>
     <style>
-        :root { --seiryu-blue: #00e5ff; --deep-blue: #001a33; }
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; font-family: 'Hiragino Mincho ProN', 'serif'; }
+        :root { --seiryu-blue: #00e5ff; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; font-family: sans-serif; }
         #video-container { position: fixed; inset: 0; z-index: 1; }
         video { width: 100%; height: 100%; object-fit: cover; }
         #particle-canvas { position: fixed; inset: 0; z-index: 9; pointer-events: none; }
-        #kotodama-container { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 10; pointer-events: none; }
-        .kanji-word { font-size: 100px; color: white; text-shadow: 0 0 20px var(--seiryu-blue), 0 0 40px var(--seiryu-blue); opacity: 0; }
-        .kanji-meaning { font-size: 16px; color: var(--seiryu-blue); margin-top: 10px; letter-spacing: 4px; opacity: 0; text-align: center; font-weight: bold; }
-
+        #kotodama-container { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 10; pointer-events: none; text-align: center; }
+        .kanji-word { font-size: 100px; color: white; text-shadow: 0 0 20px var(--seiryu-blue); opacity: 0; }
         @keyframes kanjiResonance {
-            0% { opacity: 0; transform: scale(0.5); filter: blur(10px); }
-            30% { opacity: 1; transform: scale(1.1); filter: blur(0); }
+            0% { opacity: 0; transform: scale(0.5); }
+            30% { opacity: 1; transform: scale(1.1); }
             80% { opacity: 1; transform: scale(1); }
-            100% { opacity: 0; transform: scale(1.3); filter: blur(15px); }
+            100% { opacity: 0; transform: scale(1.3); }
         }
-
-        .shutter-group { position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%); z-index: 100; text-align: center; }
-        .shutter-btn { width: 75px; height: 75px; border-radius: 50%; border: 4px solid #fff; background: rgba(255,255,255,0.2); cursor: pointer; outline: none; -webkit-tap-highlight-color: transparent; }
+        .shutter-btn { 
+            position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%); 
+            width: 80px; height: 80px; border-radius: 50%; border: 4px solid #fff; 
+            background: rgba(255,255,255,0.2); z-index: 100; cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+        #setup-layer {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 9999;
+            display: flex; align-items: center; justify-content: center; color: white; text-align: center;
+        }
     </style>
 </head>
 <body>
 
-    <div id="video-container"><video id="webcam" autoplay playsinline></video></div>
+    <div id="setup-layer" onclick="setupAudio()">
+        <div>
+            <div style="font-size: 40px; margin-bottom: 20px;">⛩️</div>
+            <p>マナーモードを解除し、<br>ここをタップして門を開いてください</p>
+        </div>
+    </div>
+
+    <div id="video-container"><video id="webcam" autoplay playsinline muted></video></div>
     <canvas id="particle-canvas"></canvas>
+    
     <div id="kotodama-container">
         <div>
             <div id="kanji-output" class="kanji-word">龍</div>
-            <div id="meaning-output" class="kanji-meaning">全ての源流</div>
+            <div id="meaning-output" style="color:var(--seiryu-blue); opacity:0; font-weight:bold; margin-top:10px;"></div>
         </div>
     </div>
-    <div class="shutter-group">
-        <div class="shutter-btn" onclick="observeWithSound()"></div>
-        <div style="color:#fff; font-size:10px; margin-top:8px; letter-spacing:2px;">OBSERVE</div>
-    </div>
+
+    <div class="shutter-btn" onclick="observe()"></div>
 
 <script>
-    // --- Audio System (Web Audio API) ---
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    const audioCtx = new AudioCtx();
-
-    function playWhishSound() {
+    let audioCtx;
+    
+    // iOSでのオーディオ制限を解除する関数
+    function setupAudio() {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContext();
+        // ダミーの音を鳴らして「許可」を得る
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
+        gain.gain.value = 0;
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(0);
+        osc.stop(0.1);
+        
+        document.getElementById('setup-layer').style.display = 'none';
+        initCamera();
+    }
+
+    function playSeiryuSound() {
+        if(!audioCtx) return;
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        
         osc.type = 'triangle';
-        osc.frequency.setValueAtTime(100, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 1.5);
-        gain.gain.setValueAtTime(0, audioCtx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.5);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 2.5);
+        osc.frequency.setValueAtTime(150, now);
+        osc.frequency.exponentialRampToValueAtTime(800, now + 2);
+        
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(0.4, now + 0.5);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 2.5);
+        
         osc.connect(gain);
         gain.connect(audioCtx.destination);
         osc.start();
-        osc.stop(audioCtx.currentTime + 2.5);
+        osc.stop(now + 2.5);
     }
 
-    function playDropSound() {
+    function playPichanSound() {
+        const now = audioCtx.currentTime;
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(800, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
-        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+        osc.frequency.setValueAtTime(900, now);
+        osc.frequency.exponentialRampToValueAtTime(1400, now + 0.1);
+        gain.gain.setValueAtTime(0.4, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
         osc.connect(gain);
         gain.connect(audioCtx.destination);
         osc.start();
-        osc.stop(audioCtx.currentTime + 0.5);
+        osc.stop(now + 0.6);
     }
 
-    // --- Particle & UI System ---
+    // --- 以下、描画系 ---
     const canvas = document.getElementById('particle-canvas');
     const ctx = canvas.getContext('2d');
     let particles = [];
-    const kotodamaList = [{k:"龍",m:"創造の源"}, {k:"響",m:"広がる波動"}, {k:"生",m:"湧き出す命"}, {k:"耕",m:"切り拓く力"}];
+    const kotodamaList = [{k:"龍",m:"創造の源"}, {k:"響",m:"広がる波動"}, {k:"生",m:"湧き出す命"}];
 
     function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
     window.addEventListener('resize', resize);
@@ -90,54 +122,44 @@
     }
 
     class Particle {
-        constructor(angle, rSpeed) { this.angle = angle; this.radius = 0; this.rSpeed = rSpeed; this.life = 1.0; }
-        update() { this.angle += 0.2; this.radius += this.rSpeed; this.life -= 0.02; }
+        constructor(a, rs) { this.a = a; this.r = 0; this.rs = rs; this.l = 1.0; }
+        update() { this.a += 0.2; this.r += this.rs; this.l -= 0.02; }
         draw() {
             ctx.beginPath();
-            ctx.arc(canvas.width/2 + Math.cos(this.angle)*this.radius, canvas.height/2 + Math.sin(this.angle)*this.radius, 2, 0, Math.PI*2);
-            ctx.fillStyle = `hsla(185, 100%, 70%, ${this.life})`;
+            ctx.arc(canvas.width/2 + Math.cos(this.a)*this.r, canvas.height/2 + Math.sin(this.a)*this.r, 2, 0, Math.PI*2);
+            ctx.fillStyle = `hsla(185, 100%, 70%, ${this.l})`;
             ctx.fill();
         }
     }
 
     function animate() {
         ctx.clearRect(0,0,canvas.width,canvas.height);
-        particles = particles.filter(p=>p.life>0);
+        particles = particles.filter(p=>p.l>0);
         particles.forEach(p=>{ p.update(); p.draw(); });
         if(particles.length>0) requestAnimationFrame(animate);
     }
 
-    function observeWithSound() {
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        
-        // 1. 龍の鳴き声（風の音）
-        playWhishSound();
-
-        // 2. 演出
+    function observe() {
+        if(!audioCtx) return;
+        playSeiryuSound();
         for(let i=0; i<80; i++) {
             setTimeout(() => {
                 particles.push(new Particle(i*0.25, 2.5 + Math.random()*2));
                 if(i===0) animate();
             }, i*10);
         }
-
         const word = kotodamaList[Math.floor(Math.random()*kotodamaList.length)];
         const kOut = document.getElementById('kanji-output');
-        const mOut = document.getElementById('meaning-output');
-        kOut.innerText = word.k; mOut.innerText = word.m;
-        kOut.style.animation = 'none'; mOut.style.animation = 'none';
+        kOut.innerText = word.k;
+        kOut.style.animation = 'none';
         void kOut.offsetWidth;
         kOut.style.animation = 'kanjiResonance 3s forwards';
-        mOut.style.animation = 'kanjiResonance 3s 0.2s forwards';
 
-        // 3. 雫の音（3秒後）
         setTimeout(() => {
-            playDropSound();
+            playPichanSound();
             alert(`「ピチャーン！」\n『${word.k}』を観測。`);
         }, 3000);
     }
-
-    initCamera();
 </script>
 </body>
 </html>
