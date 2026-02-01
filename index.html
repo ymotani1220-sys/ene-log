@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Brave Gate - Kotodama Observer</title>
+    <title>Brave Gate - Seiryu Summon</title>
     <style>
         :root {
             --seiryu-blue: #00e5ff;
@@ -16,52 +16,35 @@
         #video-container { position: fixed; inset: 0; z-index: 1; }
         video { width: 100%; height: 100%; object-fit: cover; }
 
-        /* Scanner Overlay */
-        .scanner-overlay { position: fixed; inset: 0; z-index: 2; pointer-events: none; border: 20px solid rgba(0,0,0,0.4); }
-        .frame-corner { position: absolute; width: 40px; height: 40px; border: 3px solid var(--seiryu-blue); }
-        .top-left { top: 40px; left: 40px; border-right: none; border-bottom: none; }
-        .top-right { top: 40px; right: 40px; border-left: none; border-bottom: none; }
-        .bottom-left { bottom: 40px; left: 40px; border-right: none; border-top: none; }
-        .bottom-right { bottom: 40px; right: 40px; border-left: none; border-top: none; }
+        /* Particle Canvas (龍の軌道) */
+        #particle-canvas {
+            position: fixed; inset: 0; z-index: 9; pointer-events: none;
+        }
 
-        /* Kotodama (漢字) Animation */
+        /* Kotodama (漢字) */
         #kotodama-container {
             position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
             z-index: 10; pointer-events: none;
         }
         .kanji-word {
-            font-size: 120px; color: white; text-shadow: 0 0 20px var(--seiryu-blue), 0 0 40px var(--seiryu-blue);
-            opacity: 0; transform: scale(0.5) translateZ(0);
+            font-size: 100px; color: white; text-shadow: 0 0 15px var(--seiryu-blue), 0 0 30px var(--seiryu-blue);
+            opacity: 0; transform: scale(0.8);
         }
         .kanji-meaning {
-            font-size: 18px; color: var(--seiryu-blue); margin-top: 20px; letter-spacing: 4px;
-            opacity: 0;
+            font-size: 16px; color: var(--seiryu-blue); margin-top: 10px; letter-spacing: 4px;
+            opacity: 0; text-align: center; font-weight: bold;
         }
 
-        @keyframes kanjiAppear {
-            0% { opacity: 0; transform: scale(0.2) translateY(50px); filter: blur(10px); }
-            20% { opacity: 1; transform: scale(1.1) translateY(0); filter: blur(0); }
-            80% { opacity: 1; transform: scale(1) translateY(0); }
-            100% { opacity: 0; transform: scale(1.5) translateY(-100px); filter: blur(20px); }
+        @keyframes kanjiResonance {
+            0% { opacity: 0; transform: scale(0.5); filter: blur(10px); }
+            30% { opacity: 1; transform: scale(1.1); filter: blur(0); }
+            80% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(1.3); filter: blur(15px); }
         }
-
-        /* Energy Score */
-        #score-display {
-            position: fixed; top: 15%; width: 100%; text-align: center;
-            color: var(--seiryu-blue); font-family: monospace; z-index: 5; display: none;
-        }
-        .score-num { font-size: 60px; font-weight: bold; }
 
         /* Shutter */
-        .shutter-group { position: fixed; bottom: 50px; left: 50%; transform: translateX(-50%); z-index: 100; text-align: center; }
-        .shutter-btn { width: 80px; height: 80px; border-radius: 50%; border: 5px solid #fff; background: rgba(255,255,255,0.2); cursor: pointer; transition: 0.3s; }
-        .shutter-btn:active { transform: scale(0.9); background: var(--seiryu-blue); }
-        .shutter-label { color: #fff; font-size: 12px; margin-top: 10px; letter-spacing: 2px; }
-
-        /* Message */
-        .msg-box { position: fixed; top: 80px; width: 100%; text-align: center; color: white; z-index: 5; padding: 0 40px; box-sizing: border-box; }
-        .msg-box h2 { font-size: 1.2rem; letter-spacing: 5px; color: var(--seiryu-blue); margin: 0; }
-        .msg-box p { font-size: 0.7rem; opacity: 0.7; line-height: 1.6; }
+        .shutter-group { position: fixed; bottom: 50px; left: 50%; transform: translateX(-50%); z-index: 100; }
+        .shutter-btn { width: 70px; height: 70px; border-radius: 50%; border: 4px solid #fff; background: rgba(255,255,255,0.2); cursor: pointer; }
     </style>
 </head>
 <body>
@@ -70,25 +53,10 @@
         <video id="webcam" autoplay playsinline></video>
     </div>
 
-    <div class="scanner-overlay">
-        <div class="frame-corner top-left"></div>
-        <div class="frame-corner top-right"></div>
-        <div class="frame-corner bottom-left"></div>
-        <div class="frame-corner bottom-right"></div>
-    </div>
-
-    <div class="msg-box">
-        <h2>Brave Gate</h2>
-        <p>日常に潜む「言霊」を観測し、世界のエネルギーを書き換えよ</p>
-    </div>
-
-    <div id="score-display">
-        <div style="font-size: 12px; letter-spacing: 3px;">RESONANCE LEVEL</div>
-        <div class="score-num" id="score-val">00</div>
-    </div>
+    <canvas id="particle-canvas"></canvas>
 
     <div id="kotodama-container">
-        <div style="text-align: center;">
+        <div>
             <div id="kanji-output" class="kanji-word">龍</div>
             <div id="meaning-output" class="kanji-meaning">全ての源流</div>
         </div>
@@ -96,65 +64,100 @@
 
     <div class="shutter-group">
         <div class="shutter-btn" onclick="observe()"></div>
-        <div class="shutter-label">OBSERVE</div>
     </div>
 
 <script>
+    const canvas = document.getElementById('particle-canvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+
     const kotodamaList = [
         { k: "龍", m: "目覚める創造の源" },
         { k: "響", m: "共鳴し広がる波動" },
         { k: "生", m: "土から湧き出す命" },
-        { k: "耕", m: "未来を切り拓く力" },
-        { k: "結", m: "個と個が繋がる秩序" },
-        { k: "開", m: "新たな可能性の門" },
-        { k: "智慧", m: "エントロピーを超える光" },
-        { k: "湧", m: "溢れ出すアハ体験" }
+        { k: "耕", m: "未来を切り拓く力" }
     ];
 
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
     async function initCamera() {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-            document.getElementById('webcam').srcObject = stream;
-        } catch (e) {
-            alert("カメラへのアクセスを許可してください");
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        document.getElementById('webcam').srcObject = stream;
+    }
+
+    class Particle {
+        constructor(angle, radiusSpeed) {
+            this.angle = angle;
+            this.radius = 0;
+            this.radiusSpeed = radiusSpeed;
+            this.x = canvas.width / 2;
+            this.y = canvas.height / 2;
+            this.life = 1.0;
+            this.color = `hsla(185, 100%, 50%, ${this.life})`;
+        }
+        update() {
+            this.angle += 0.15; // 回転スピード
+            this.radius += this.radiusSpeed; // 広がるスピード
+            this.x = canvas.width / 2 + Math.cos(this.angle) * this.radius;
+            this.y = canvas.height / 2 + Math.sin(this.angle) * this.radius;
+            this.life -= 0.02;
+        }
+        draw() {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
+            ctx.fillStyle = `hsla(185, 100%, 70%, ${this.life})`;
+            ctx.fill();
+            // 光の余韻（グロー効果）
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = 'cyan';
         }
     }
 
-    function observe() {
-        const scoreBox = document.getElementById('score-display');
-        const kanjiOutput = document.getElementById('kanji-output');
-        const meaningOutput = document.getElementById('meaning-output');
-        const scoreVal = document.getElementById('score-val');
-
-        // 1. スコア演出
-        scoreBox.style.display = 'block';
-        let score = Math.floor(Math.random() * 50) + 50;
-        scoreVal.innerText = score;
-
-        // 2. 言霊の選定
-        const word = kotodamaList[Math.floor(Math.random() * kotodamaList.length)];
-        kanjiOutput.innerText = word.k;
-        meaningOutput.innerText = word.m;
-
-        // 3. アニメーション実行
-        kanjiOutput.style.animation = 'none';
-        meaningOutput.style.animation = 'none';
-        void kanjiOutput.offsetWidth; // 強制リフロー
-        
-        kanjiOutput.style.animation = 'kanjiAppear 2.5s forwards';
-        meaningOutput.style.animation = 'kanjiAppear 2.5s 0.2s forwards';
-
-        // 4. 完了後の処理
-        setTimeout(() => {
-            scoreBox.style.display = 'none';
-            if(confirm(`「ピチャーン！」\n『${word.k}』のエネルギーを観測しました。Tableへ持ち寄りますか？`)) {
-                // ここで将来的にGitHub上のデータに保存する等の処理
-                console.log("Saving to Table...");
-            }
-        }, 2600);
+    function animateParticles() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles = particles.filter(p => p.life > 0);
+        particles.forEach(p => {
+            p.update();
+            p.draw();
+        });
+        if (particles.length > 0) requestAnimationFrame(animateParticles);
     }
 
-    window.onload = initCamera;
+    function observe() {
+        // 1. パーティクル生成（龍の旋回をシミュレート）
+        for (let i = 0; i < 100; i++) {
+            setTimeout(() => {
+                particles.push(new Particle(i * 0.2, 2 + Math.random() * 2));
+                if (i === 0) animateParticles();
+            }, i * 10);
+        }
+
+        // 2. 言霊表示
+        const word = kotodamaList[Math.floor(Math.random() * kotodamaList.length)];
+        const kOut = document.getElementById('kanji-output');
+        const mOut = document.getElementById('meaning-output');
+
+        kOut.innerText = word.k;
+        mOut.innerText = word.m;
+        
+        kOut.style.animation = 'none';
+        mOut.style.animation = 'none';
+        void kOut.offsetWidth;
+        
+        kOut.style.animation = 'kanjiResonance 3s forwards';
+        mOut.style.animation = 'kanjiResonance 3s 0.3s forwards';
+
+        setTimeout(() => {
+            alert(`「ピチャーン！」\n『${word.k}』のエネルギーを観測しました。`);
+        }, 3200);
+    }
+
+    initCamera();
 </script>
 </body>
 </html>
