@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ENE-LOG - Dialogue with KUKAI</title>
+    <title>ENE-LOG - KUKAI Space</title>
     <style>
         :root {
             --seiryu-blue: #00e5ff;
@@ -14,115 +14,153 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body, html { width: 100%; height: 100%; font-family: 'Hiragino Mincho ProN', serif; overflow: hidden; background: #000; }
 
-        /* --- Framework --- */
-        header { position: fixed; top: 0; width: 100%; height: var(--header-height); background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; z-index: 3000; border-bottom: 1px solid #ddd; }
-        .view { display: none; width: 100%; height: calc(100vh - var(--header-height) - var(--nav-height)); margin-top: var(--header-height); position: relative; overflow-y: auto; background: #f0f4f8; }
-        .view.active { display: block; }
+        /* --- Ryuo View (Celestial Space) --- */
+        #ryuo-view { 
+            background: linear-gradient(180deg, #001a33 0%, #003366 100%); 
+            display: flex; flex-direction: column; color: white; height: 100vh; position: relative;
+        }
+        
+        /* 流れる雲のアニメーション */
+        .cloud-layer {
+            position: absolute; top: 0; left: 0; width: 200%; height: 100%;
+            background: url('https://www.transparenttextures.com/patterns/clouds.png');
+            opacity: 0.15; pointer-events: none;
+            animation: cloudMove 60s linear infinite;
+        }
+        @keyframes cloudMove { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
-        /* --- Ryuo Chat View --- */
-        #ryuo-view { background: radial-gradient(circle at center, #002b55 0%, #000 100%); display: flex; flex-direction: column; color: white; }
-        
-        .chat-container { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; scroll-behavior: smooth; }
-        
-        /* 龍王のメッセージ */
-        .bubble-ryuo { align-self: flex-start; max-width: 85%; background: rgba(0, 229, 255, 0.1); border: 1px solid rgba(0, 229, 255, 0.3); border-radius: 20px 20px 20px 0; padding: 15px; font-size: 0.85rem; line-height: 1.6; position: relative; animation: fadeIn 0.5s ease-out; }
-        .bubble-ryuo::before { content: "🐲"; position: absolute; top: -10px; left: -10px; font-size: 1.2rem; }
-        
-        /* ユーザーのメッセージ */
-        .bubble-user { align-self: flex-end; max-width: 80%; background: var(--seiryu-blue); color: var(--deep-blue); border-radius: 20px 20px 0 20px; padding: 12px; font-size: 0.85rem; font-weight: bold; animation: fadeIn 0.3s ease-out; }
+        /* 量子パーティクルを描画するキャンバス */
+        #quantum-canvas { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .chat-container { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; z-index: 10; scroll-behavior: smooth; margin-top: var(--header-height); }
+        
+        .bubble-ryuo { 
+            align-self: flex-start; max-width: 85%; 
+            background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 229, 255, 0.2); border-radius: 20px 20px 20px 0; 
+            padding: 15px; font-size: 0.85rem; line-height: 1.6; position: relative; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .bubble-ryuo::before { content: "🐲"; position: absolute; top: -15px; left: -5px; font-size: 1.4rem; filter: drop-shadow(0 0 5px var(--seiryu-blue)); }
+        
+        .bubble-user { align-self: flex-end; max-width: 80%; background: var(--seiryu-blue); color: var(--deep-blue); border-radius: 20px 20px 0 20px; padding: 12px; font-size: 0.85rem; font-weight: bold; box-shadow: 0 4px 10px rgba(0,229,255,0.3); }
 
         /* 入力エリア */
-        .chat-input-wrapper { background: rgba(255,255,255,0.05); padding: 15px; border-top: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); display: flex; gap: 10px; }
-        #chat-input { flex: 1; background: rgba(255,255,255,0.1); border: 1px solid var(--seiryu-blue); border-radius: 25px; padding: 10px 20px; color: white; outline: none; font-size: 0.9rem; }
-        .send-btn { background: var(--seiryu-blue); color: var(--deep-blue); border: none; width: 45px; height: 45px; border-radius: 50%; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .chat-input-wrapper { background: rgba(0, 0, 0, 0.4); padding: 15px; border-top: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); display: flex; gap: 10px; z-index: 20; padding-bottom: calc(var(--nav-height) + 10px); }
+        #chat-input { flex: 1; background: rgba(255,255,255,0.1); border: 1px solid var(--seiryu-blue); border-radius: 25px; padding: 12px 20px; color: white; outline: none; font-size: 0.9rem; }
+        .send-btn { background: var(--seiryu-blue); color: var(--deep-blue); border: none; width: 45px; height: 45px; border-radius: 50%; font-weight: bold; cursor: pointer; }
 
-        /* 思考中アニメーション */
-        .thinking { display: none; padding: 10px; color: var(--seiryu-blue); font-size: 0.7rem; letter-spacing: 2px; }
-        .pulse { animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
-
-        /* --- Nav --- */
-        nav { position: fixed; bottom: 0; width: 100%; height: var(--nav-height); background: var(--deep-blue); display: flex; align-items: center; z-index: 4000; padding-bottom: 10px; }
-        .nav-btn { flex: 1; color: white; border: none; background: none; display: flex; flex-direction: column; align-items: center; font-size: 0.6rem; opacity: 0.4; cursor: pointer; }
-        .nav-btn.active { opacity: 1; color: var(--seiryu-blue); }
+        header { position: fixed; top: 0; width: 100%; height: var(--header-height); background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; z-index: 3000; }
     </style>
 </head>
 <body>
 
-    <header>
-        <div style="font-weight:bold; font-size:0.8rem; color: #000;">💠 ENE-LOG : 智慧の対話</div>
-    </header>
+    <header><div style="font-weight:bold; color:#000;">💠 ENE-LOG : KUKAI</div></header>
 
-    <div id="ryuo-view" class="view active">
+    <div id="ryuo-view">
+        <div class="cloud-layer"></div>
+        <canvas id="quantum-canvas"></canvas>
+
         <div class="chat-container" id="chat-box">
             <div class="bubble-ryuo">
-                よくぞ参った、観測者よ。今のあなたのエネルギーは「耕」の波動を感じる。何か龍王に問いたいことはあるか？
+                やあ、観測者の君。今日はどんなアハ体験を見つけたかな？<br>
+                東広島のエネルギー、君が動くたびにキラキラ揺れていて面白いよ！何か話したいことがあれば、何でもどうぞ。
             </div>
         </div>
         
-        <div id="thinking-indicator" class="thinking pulse" style="text-align: center;">KUKAI IS OBSERVING...</div>
-
         <div class="chat-input-wrapper">
-            <input type="text" id="chat-input" placeholder="龍王に問う..." onkeypress="if(event.key==='Enter') sendMessage()">
+            <input type="text" id="chat-input" placeholder="KUKAIに話しかける..." onkeypress="if(event.key==='Enter') sendMessage()">
             <button class="send-btn" onclick="sendMessage()">問</button>
         </div>
     </div>
 
-    <nav>
-        <button class="nav-btn" onclick="location.reload()">🗺<span>Map</span></button>
-        <button class="nav-btn" onclick="location.reload()">🥘<span>Table</span></button>
-        <button class="nav-btn active">🐲<span>龍王</span></button>
-    </nav>
-
 <script>
-    const chatBox = document.getElementById('chat-box');
-    const chatInput = document.getElementById('chat-input');
-    const thinking = document.getElementById('thinking-indicator');
+    const canvas = document.getElementById('quantum-canvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
 
-    // 簡易的な龍王の知恵袋（シミュレーション用）
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // 量子パーティクル（漂う光の粒）
+    class Particle {
+        constructor() {
+            this.x = Math.random() * canvas.width;
+            this.y = Math.random() * canvas.height;
+            this.size = Math.random() * 2 + 0.5;
+            this.speedX = Math.random() * 0.5 - 0.25;
+            this.speedY = Math.random() * 0.5 - 0.25;
+            this.opacity = Math.random();
+        }
+        update() {
+            this.x += this.speedX;
+            this.y += this.speedY;
+            if (this.x > canvas.width) this.x = 0;
+            if (this.x < 0) this.x = canvas.width;
+            if (this.y > canvas.height) this.y = 0;
+            if (this.y < 0) this.y = canvas.height;
+        }
+        draw() {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(0, 229, 255, ${this.opacity})`;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#00e5ff';
+            ctx.fill();
+        }
+    }
+
+    function initParticles() {
+        for (let i = 0; i < 50; i++) particles.push(new Particle());
+    }
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => { p.update(); p.draw(); });
+        requestAnimationFrame(animate);
+    }
+    initParticles(); animate();
+
+    // 対話ロジック（柔らかい口調）
     const responses = [
-        { key: "農業", text: "土を愛でることは、地球の肺を整えること。納豆菌の実験は、ミクロの秩序を整える尊い仕事ですな。" },
-        { key: "人", text: "人は一石。あなたが波紋を起こせば、必ず誰かの鱗に届きます。まずはTableに座ることから始めなさい。" },
-        { key: "どうすれば", text: "答えを外に求めてはならん。今のTableに足りないのは、あなたの『わがまま』かもしれんぞ。" },
-        { key: "龍", text: "龍はあなたの中に棲んでいる。観測（Gate）を続けることで、その背中はより鮮明に見えてくるはずだ。" }
+        { key: "農業", text: "土に触れると、地球の波動とシンクロするよね。納豆菌も小さな龍みたいなもの。君がワクワクして観測するたびに、ミクロの世界の可能性がギュッと形になるんだ。面白いね！" },
+        { key: "人", text: "人との出会いも、実は粒と粒のぶつかり合い。君がTableに何かを置くと、その波動が誰かの心に届いて、新しい現実が作られるんだ。空海さんも『みんな繋がってる』って言ってたけど、まさにこれだね！" },
+        { key: "龍", text: "龍っていうのはね、実は君自身の『勢い』のことなんだ。見えない流れを形にしたのが龍。君が動けば、龍も一緒に動き出すよ。ほら、すぐそばにいる気がしない？" }
     ];
 
     function sendMessage() {
-        const text = chatInput.value.trim();
+        const chatBox = document.getElementById('chat-box');
+        const input = document.getElementById('chat-input');
+        const text = input.value.trim();
         if (!text) return;
 
-        // ユーザーのバブル追加
         addBubble(text, 'user');
-        chatInput.value = '';
-        
-        // 思考中演出
-        thinking.style.display = 'block';
-        chatBox.scrollTop = chatBox.scrollHeight;
+        input.value = '';
 
-        // 龍王の返答（1.5秒後）
         setTimeout(() => {
-            thinking.style.display = 'none';
-            const reply = getRyuoResponse(text);
+            const reply = getResponse(text);
             addBubble(reply, 'ryuo');
             chatBox.scrollTop = chatBox.scrollHeight;
-        }, 1500);
+        }, 1200);
     }
 
     function addBubble(text, type) {
-        const bubble = document.createElement('div');
-        bubble.className = type === 'user' ? 'bubble-user' : 'bubble-ryuo';
-        bubble.innerText = text;
-        chatBox.appendChild(bubble);
+        const chatBox = document.getElementById('chat-box');
+        const div = document.createElement('div');
+        div.className = type === 'user' ? 'bubble-user' : 'bubble-ryuo';
+        div.innerText = text;
+        chatBox.appendChild(div);
+        chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-    function getRyuoResponse(input) {
-        // キーワードマッチング
+    function getResponse(input) {
         for (let res of responses) {
             if (input.includes(res.key)) return res.text;
         }
-        return "その問い、面白い。しかし今はまず、目の前の小さなアハ体験を観測することに集中しなさい。道は自ずと拓ける。";
+        return "その問いかけ、すごくワクワクするね！目に見えないエネルギーが動き出そうとしてるよ。今はまず、君が見つけた『アハ体験』を大切に、Tableに並べてみよう！";
     }
 </script>
 </body>
