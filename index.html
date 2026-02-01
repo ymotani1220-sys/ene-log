@@ -3,255 +3,158 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ENE-LOG Ecosystem - Perfect Integration</title>
+    <title>Brave Gate - Kotodama Observer</title>
     <style>
         :root {
             --seiryu-blue: #00e5ff;
             --deep-blue: #001a33;
-            --agri: #4CAF50;
-            --skill: #673AB7;
-            --space: #FF9800;
-            --person: #e91e63;
-            --white: #ffffff;
-            --header-height: 60px;
-            --nav-height: 75px;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body, html { width: 100%; height: 100%; font-family: sans-serif; overflow: hidden; background: #000; color: #333; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; font-family: 'Hiragino Mincho ProN', 'serif'; }
 
-        /* Splash */
-        #splash { position: fixed; inset: 0; background: radial-gradient(circle, #003366, #000); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; color: #fff; cursor: pointer; transition: 0.8s; }
-        .dragon-icon { font-size: 80px; filter: drop-shadow(0 0 20px var(--seiryu-blue)); animation: float 3s infinite ease-in-out; }
-        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+        /* AR Camera Base */
+        #video-container { position: fixed; inset: 0; z-index: 1; }
+        video { width: 100%; height: 100%; object-fit: cover; }
 
-        /* Main Structure */
-        #app-main { display: none; opacity: 0; width: 100%; height: 100%; transition: 0.5s; background: #f0f4f8; }
-        header { 
-            position: fixed; top: 0; width: 100%; height: var(--header-height); 
-            background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); 
-            display: flex; align-items: center; justify-content: space-between; 
-            padding: 0 15px; z-index: 3000; border-bottom: 1px solid #ddd;
+        /* Scanner Overlay */
+        .scanner-overlay { position: fixed; inset: 0; z-index: 2; pointer-events: none; border: 20px solid rgba(0,0,0,0.4); }
+        .frame-corner { position: absolute; width: 40px; height: 40px; border: 3px solid var(--seiryu-blue); }
+        .top-left { top: 40px; left: 40px; border-right: none; border-bottom: none; }
+        .top-right { top: 40px; right: 40px; border-left: none; border-bottom: none; }
+        .bottom-left { bottom: 40px; left: 40px; border-right: none; border-top: none; }
+        .bottom-right { bottom: 40px; right: 40px; border-left: none; border-top: none; }
+
+        /* Kotodama (漢字) Animation */
+        #kotodama-container {
+            position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+            z-index: 10; pointer-events: none;
         }
-        .layer-bar { display: flex; gap: 6px; overflow-x: auto; padding: 5px; scrollbar-width: none; }
-        .layer-chip { padding: 5px 10px; border-radius: 15px; border: 1px solid #ddd; background: white; font-size: 0.6rem; font-weight: bold; cursor: pointer; transition: 0.3s; white-space: nowrap; }
-        .layer-chip.active { color: white; border-color: transparent; }
-        .c--person.active { background: var(--person); } .c--agri.active { background: var(--agri); } .c--skill.active { background: var(--skill); } .c--space.active { background: var(--space); }
+        .kanji-word {
+            font-size: 120px; color: white; text-shadow: 0 0 20px var(--seiryu-blue), 0 0 40px var(--seiryu-blue);
+            opacity: 0; transform: scale(0.5) translateZ(0);
+        }
+        .kanji-meaning {
+            font-size: 18px; color: var(--seiryu-blue); margin-top: 20px; letter-spacing: 4px;
+            opacity: 0;
+        }
 
-        .view { display: none; width: 100%; height: calc(100vh - var(--header-height) - var(--nav-height)); margin-top: var(--header-height); position: relative; overflow-y: auto; }
-        .view.active { display: block; }
+        @keyframes kanjiAppear {
+            0% { opacity: 0; transform: scale(0.2) translateY(50px); filter: blur(10px); }
+            20% { opacity: 1; transform: scale(1.1) translateY(0); filter: blur(0); }
+            80% { opacity: 1; transform: scale(1) translateY(0); }
+            100% { opacity: 0; transform: scale(1.5) translateY(-100px); filter: blur(20px); }
+        }
 
-        /* Home View (Map) */
-        #home-view { background: #07192f url('https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&q=80&w=2000') center/cover; }
-        .node { position: absolute; transition: 0.4s; cursor: pointer; transform: translate(-50%, -50%); }
-        .node--person { width: 50px; height: 50px; border-radius: 50%; border: 3px solid #fff; background-size: cover; background-position: center; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
-        .node--scale { width: 44px; height: 48px; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); display: flex; align-items: center; justify-content: center; font-size: 18px; color: white; }
-        .node--agri { background: var(--agri); } .node--skill { background: var(--skill); } .node--space { background: var(--space); }
-        .info-pop { position: absolute; bottom: 75px; left: 50%; transform: translateX(-50%); width: 200px; background: white; border-radius: 15px; padding: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 500; display: none; animation: bounce 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        /* Energy Score */
+        #score-display {
+            position: fixed; top: 15%; width: 100%; text-align: center;
+            color: var(--seiryu-blue); font-family: monospace; z-index: 5; display: none;
+        }
+        .score-num { font-size: 60px; font-weight: bold; }
 
-        /* Table/Ryuo/Gate */
-        .table-container { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
-        .table-col { background: rgba(255,255,255,0.6); border-radius: 15px; padding: 10px; }
-        .item-card { background: white; border-radius: 10px; padding: 10px; margin-bottom: 8px; border-left: 4px solid #ccc; font-size: 0.75rem; }
+        /* Shutter */
+        .shutter-group { position: fixed; bottom: 50px; left: 50%; transform: translateX(-50%); z-index: 100; text-align: center; }
+        .shutter-btn { width: 80px; height: 80px; border-radius: 50%; border: 5px solid #fff; background: rgba(255,255,255,0.2); cursor: pointer; transition: 0.3s; }
+        .shutter-btn:active { transform: scale(0.9); background: var(--seiryu-blue); }
+        .shutter-label { color: #fff; font-size: 12px; margin-top: 10px; letter-spacing: 2px; }
 
-        #ryuo-view { background: linear-gradient(135deg, var(--deep-blue) 0%, #003366 100%); color: white; text-align: center; }
-        .chat-input-area { display: flex; gap: 8px; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 30px; margin: 20px; border: 1px solid rgba(0,229,255,0.3); }
-        .chat-input-area input { flex:1; background:none; border:none; color:white; outline:none; }
-
-        #gate-view { background: #000; overflow: hidden; color: var(--seiryu-blue); }
-        .gate-msg { position: absolute; top: 20px; width: 100%; text-align: center; padding: 0 30px; z-index: 5; }
-        .gate-msg h2 { font-size: 1.1rem; letter-spacing: 4px; text-shadow: 0 0 10px var(--seiryu-blue); }
-        .gate-msg p { font-size: 0.65rem; color: #fff; margin-top:5px; opacity: 0.8; }
-        .cam-frame-view { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 2; pointer-events: none; }
-        .frame-box-view { width: 80%; height: 50%; border: 1px solid rgba(0,229,255,0.4); border-radius: 20px; position: relative; }
-        .frame-box-view::before { content:''; position:absolute; top:-10px; left:-10px; width:25px; height:25px; border-top:4px solid var(--seiryu-blue); border-left:4px solid var(--seiryu-blue); }
-        .frame-box-view::after { content:''; position:absolute; bottom:-10px; right:-10px; width:25px; height:25px; border-bottom:4px solid var(--seiryu-blue); border-right:4px solid var(--seiryu-blue); }
-        .shutter-view { position: absolute; bottom: 35px; left: 50%; transform: translateX(-50%); width: 70px; height: 70px; border: 4px solid #fff; border-radius: 50%; background: rgba(255,255,255,0.2); cursor: pointer; z-index: 10; }
-
-        /* Modal (カメラ枠復旧) */
-        #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 4000; backdrop-filter: blur(8px); }
-        .modal-inner { width: 90%; max-width: 400px; background: white; border-radius: 30px; padding: 25px; max-height: 90vh; overflow-y: auto; }
-        .snapshot-area { width: 100%; height: 120px; background: #222; border-radius: 15px; margin-bottom: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--seiryu-blue); border: 2px dashed rgba(0, 229, 255, 0.4); cursor: pointer; }
-        
-        .trade-toggle { display: flex; background: #eee; border-radius: 20px; padding: 4px; margin-bottom: 15px; }
-        .t-btn { flex: 1; border: none; padding: 8px; border-radius: 15px; font-weight: bold; cursor: pointer; background: none; color: #888; font-size: 0.75rem; }
-        .t-btn.active { background: white; color: var(--deep-blue); }
-
-        .sphere-sel { display: flex; justify-content: space-around; margin-bottom: 15px; }
-        .sphere-btn { width: 50px; height: 50px; border-radius: 50%; border: 3px solid transparent; color: white; font-size: 0.6rem; font-weight: bold; cursor: pointer; opacity: 0.4; transition: 0.3s; }
-        .sphere-btn.selected { border-color: #333; opacity: 1; transform: scale(1.1); }
-
-        /* Navigation */
-        nav { position: fixed; bottom: 0; width: 100%; height: var(--nav-height); background: var(--deep-blue); display: flex; align-items: center; z-index: 2000; padding-bottom: 10px; }
-        .nav-btn { flex: 1; color: white; border: none; background: none; display: flex; flex-direction: column; align-items: center; font-size: 0.65rem; opacity: 0.5; cursor: pointer; }
-        .nav-btn.active { opacity: 1; color: var(--seiryu-blue); }
-        .fab { position: fixed; bottom: 95px; right: 20px; width: 60px; height: 60px; background: var(--seiryu-blue); border-radius: 50%; border: none; color: var(--deep-blue); font-size: 30px; cursor: pointer; z-index: 3000; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        /* Message */
+        .msg-box { position: fixed; top: 80px; width: 100%; text-align: center; color: white; z-index: 5; padding: 0 40px; box-sizing: border-box; }
+        .msg-box h2 { font-size: 1.2rem; letter-spacing: 5px; color: var(--seiryu-blue); margin: 0; }
+        .msg-box p { font-size: 0.7rem; opacity: 0.7; line-height: 1.6; }
     </style>
 </head>
 <body>
 
-<div id="splash" onclick="launchApp()">
-    <div class="dragon-icon">🐉</div>
-    <h1>ENE-LOG</h1>
-    <p>Tap to Observe</p>
-</div>
+    <div id="video-container">
+        <video id="webcam" autoplay playsinline></video>
+    </div>
 
-<div id="app-main">
-    <header>
-        <div style="font-weight:bold; font-size:0.8rem;">💠 ENE-LOG</div>
-        <div class="layer-bar">
-            <div class="layer-chip active c--person" onclick="toggleLayer('person', this)">👤 人</div>
-            <div class="layer-chip active c--agri" onclick="toggleLayer('agri', this)">🌱 農</div>
-            <div class="layer-chip active c--skill" onclick="toggleLayer('skill', this)">💡 智慧</div>
-            <div class="layer-chip active c--space" onclick="toggleLayer('space', this)">🏠 場</div>
-        </div>
-    </header>
+    <div class="scanner-overlay">
+        <div class="frame-corner top-left"></div>
+        <div class="frame-corner top-right"></div>
+        <div class="frame-corner bottom-left"></div>
+        <div class="frame-corner bottom-right"></div>
+    </div>
 
-    <div class="l-content-wrapper">
-        <div id="home-view" class="view active">
-            <div id="map-area" style="width:100%; height:100%;"></div>
-            <div id="map-popup" class="info-pop"><h4 id="pop-title" style="margin-bottom:5px;"></h4><p id="pop-desc" style="font-size:0.7rem; color:#666;"></p></div>
-        </div>
-        <div id="table-view" class="view">
-            <div class="table-container">
-                <div class="table-col"><div style="text-align:center;font-weight:bold;font-size:0.8rem;margin-bottom:10px;">🥘 持ち寄る</div><div id="off-list"></div></div>
-                <div class="table-col"><div style="text-align:center;font-weight:bold;font-size:0.8rem;margin-bottom:10px;">🍽 リクエスト</div><div id="req-list"></div></div>
-            </div>
-        </div>
-        <div id="ryuo-view" class="view">
-            <div style="padding:40px 20px;">
-                <div style="font-size:60px;">🐉</div>
-                <h3>龍王の智慧</h3>
-                <div class="chat-input-area">
-                    <input type="text" id="ai-input" placeholder="龍王に相談...">
-                    <button onclick="askRyuo()" style="background:var(--seiryu-blue); border:none; padding:5px 15px; border-radius:20px; font-weight:bold;">問う</button>
-                </div>
-                <div id="wisdom-list" style="text-align:left;"></div>
-            </div>
-        </div>
-        <div id="gate-view" class="view">
-            <video id="video" autoplay playsinline style="width:100%; height:100%; object-fit:cover;"></video>
-            <div class="gate-msg">
-                <h2>Brave Gate</h2>
-                <p>現実に潜むエネルギーを、勇気を持って観測せよ。</p>
-            </div>
-            <div class="cam-frame-view"><div class="frame-box-view"></div></div>
-            <div class="shutter-view" onclick="alert('「ピチャーン！」\n観測データがENE-LOGへ統合されました。')"></div>
+    <div class="msg-box">
+        <h2>Brave Gate</h2>
+        <p>日常に潜む「言霊」を観測し、世界のエネルギーを書き換えよ</p>
+    </div>
+
+    <div id="score-display">
+        <div style="font-size: 12px; letter-spacing: 3px;">RESONANCE LEVEL</div>
+        <div class="score-num" id="score-val">00</div>
+    </div>
+
+    <div id="kotodama-container">
+        <div style="text-align: center;">
+            <div id="kanji-output" class="kanji-word">龍</div>
+            <div id="meaning-output" class="kanji-meaning">全ての源流</div>
         </div>
     </div>
 
-    <button class="fab" onclick="openModal()">+</button>
-
-    <nav>
-        <button class="nav-btn active" onclick="switchView('home-view', this)">🗺<span>Map</span></button>
-        <button class="nav-btn" onclick="switchView('table-view', this)">🥘<span>Table</span></button>
-        <button class="nav-btn" onclick="switchView('ryuo-view', this)">🐲<span>龍王</span></button>
-        <button id="gate-nav" class="nav-btn" onclick="initAR()">⛩<span>Gate</span></button>
-    </nav>
-</div>
-
-<div id="modal">
-    <div class="modal-inner">
-        <h3 style="text-align:center; margin-bottom:15px; font-size:1rem;">エネルギーをテーブルへ</h3>
-        
-        <div class="snapshot-area" onclick="alert('📸 カメラを起動します')">
-            <span style="font-size:1.5rem;">📸</span>
-            <span style="font-size:0.6rem; margin-top:5px;">感性観測 Snapshot</span>
-        </div>
-
-        <div class="trade-toggle">
-            <button class="t-btn active" id="m-off" onclick="setTrade('offering')">持ち寄る</button>
-            <button class="t-btn" id="m-req" onclick="setTrade('request')">リクエスト</button>
-        </div>
-        <div class="sphere-sel">
-            <button id="s-person" onclick="setSphere('person','👤')" class="sphere-btn selected" style="background:var(--person);">人</button>
-            <button id="s-agri" onclick="setSphere('agri','🌱')" class="sphere-btn" style="background:var(--agri);">農</button>
-            <button id="s-skill" onclick="setSphere('skill','💡')" class="sphere-btn" style="background:var(--skill);">智慧</button>
-            <button id="s-space" onclick="setSphere('space','🏠')" class="sphere-btn" style="background:var(--space);">場</button>
-        </div>
-        <input type="text" id="m-title" placeholder="タイトル" style="width:100%; padding:10px; border-radius:10px; border:1px solid #ddd; margin-bottom:10px;">
-        <textarea id="m-desc" placeholder="詳細・メッセージ" rows="2" style="width:100%; padding:10px; border-radius:10px; border:1px solid #ddd; margin-bottom:15px;"></textarea>
-        <button onclick="saveData()" style="width:100%; padding:15px; background:var(--deep-blue); color:white; border-radius:30px; border:none; font-weight:bold; cursor:pointer;">テーブルへ置く</button>
-        <button onclick="closeModal()" style="width:100%; background:none; border:none; color:#999; margin-top:10px; cursor:pointer;">キャンセル</button>
+    <div class="shutter-group">
+        <div class="shutter-btn" onclick="observe()"></div>
+        <div class="shutter-label">OBSERVE</div>
     </div>
-</div>
 
 <script>
-    let db = [
-        { type:'person', trade:'offering', icon:'👤', title:'茂谷 幸弘', desc:'Table案内人。', x:25, y:35, img:'https://i.pravatar.cc/150?u=shige' },
-        { type:'agri', trade:'offering', icon:'🌱', title:'納豆菌実験', desc:'コーヒーの木の防虫。', x:60, y:50 },
-        { type:'skill', trade:'request', icon:'💡', title:'量子力学', desc:'波動関数について。', x:45, y:20 }
+    const kotodamaList = [
+        { k: "龍", m: "目覚める創造の源" },
+        { k: "響", m: "共鳴し広がる波動" },
+        { k: "生", m: "土から湧き出す命" },
+        { k: "耕", m: "未来を切り拓く力" },
+        { k: "結", m: "個と個が繋がる秩序" },
+        { k: "開", m: "新たな可能性の門" },
+        { k: "智慧", m: "エントロピーを超える光" },
+        { k: "湧", m: "溢れ出すアハ体験" }
     ];
-    let activeLayers = ['person', 'agri', 'skill', 'space'];
-    let mCat = 'person', mIcon = '👤', mTrade = 'offering';
 
-    function launchApp() { document.getElementById('splash').style.display='none'; document.getElementById('app-main').style.display='block'; setTimeout(()=>{document.getElementById('app-main').style.opacity='1'; render();}, 50); }
-    function openModal() { document.getElementById('modal').style.display='flex'; }
-    function closeModal() { document.getElementById('modal').style.display='none'; }
-    function setTrade(v) { mTrade = v; document.getElementById('m-off').classList.toggle('active', v==='offering'); document.getElementById('m-req').classList.toggle('active', v==='request'); }
-    function setSphere(cat, icon) { mCat = cat; mIcon = icon; document.querySelectorAll('.sphere-btn').forEach(b=>b.classList.remove('selected')); document.getElementById('s-'+cat).classList.add('selected'); }
-    function toggleLayer(type, btn) { if(activeLayers.includes(type)) activeLayers = activeLayers.filter(l=>l!==type); else activeLayers.push(type); btn.classList.toggle('active'); render(); }
-
-    function switchView(id, btn) {
-        document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-        if(!btn) btn = document.getElementById('gate-nav');
-        btn.classList.add('active');
-        if(id !== 'gate-view' && window.stream) { window.stream.getTracks().forEach(t=>t.stop()); }
+    async function initCamera() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+            document.getElementById('webcam').srcObject = stream;
+        } catch (e) {
+            alert("カメラへのアクセスを許可してください");
+        }
     }
 
-    async function initAR() {
-        switchView('gate-view', document.getElementById('gate-nav'));
-        try { window.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } }); document.getElementById('video').srcObject = window.stream; } catch (e) { alert("カメラが見つかりません"); }
+    function observe() {
+        const scoreBox = document.getElementById('score-display');
+        const kanjiOutput = document.getElementById('kanji-output');
+        const meaningOutput = document.getElementById('meaning-output');
+        const scoreVal = document.getElementById('score-val');
+
+        // 1. スコア演出
+        scoreBox.style.display = 'block';
+        let score = Math.floor(Math.random() * 50) + 50;
+        scoreVal.innerText = score;
+
+        // 2. 言霊の選定
+        const word = kotodamaList[Math.floor(Math.random() * kotodamaList.length)];
+        kanjiOutput.innerText = word.k;
+        meaningOutput.innerText = word.m;
+
+        // 3. アニメーション実行
+        kanjiOutput.style.animation = 'none';
+        meaningOutput.style.animation = 'none';
+        void kanjiOutput.offsetWidth; // 強制リフロー
+        
+        kanjiOutput.style.animation = 'kanjiAppear 2.5s forwards';
+        meaningOutput.style.animation = 'kanjiAppear 2.5s 0.2s forwards';
+
+        // 4. 完了後の処理
+        setTimeout(() => {
+            scoreBox.style.display = 'none';
+            if(confirm(`「ピチャーン！」\n『${word.k}』のエネルギーを観測しました。Tableへ持ち寄りますか？`)) {
+                // ここで将来的にGitHub上のデータに保存する等の処理
+                console.log("Saving to Table...");
+            }
+        }, 2600);
     }
 
-    function askRyuo() {
-        const input = document.getElementById('ai-input');
-        if(!input.value) return;
-        const div = document.createElement('div');
-        div.style.cssText = "background:rgba(255,255,255,0.1); padding:10px; border-radius:10px; margin-top:10px; border-left:3px solid var(--seiryu-blue); font-size:0.8rem; text-align:left;";
-        div.innerHTML = `<strong>Q: ${input.value}</strong><br>A: 共鳴を確認。観測を続けなさい。 KUKAI`;
-        document.getElementById('wisdom-list').prepend(div);
-        input.value = '';
-    }
-
-    function saveData() {
-        const title = document.getElementById('m-title').value;
-        if(!title) return alert("内容を入力してください");
-        db.unshift({ id: Date.now(), type: mCat, trade: mTrade, icon: mIcon, title, desc: document.getElementById('m-desc').value, x: 20 + Math.random()*60, y: 20 + Math.random()*60, img: mCat === 'person' ? `https://i.pravatar.cc/150?u=${Date.now()}` : null });
-        document.getElementById('m-title').value=''; document.getElementById('m-desc').value='';
-        closeModal(); render();
-        alert("「ピチャーン！」\nあなたのエネルギーがテーブルに届きました。");
-    }
-
-    function render() {
-        const filtered = db.filter(i => activeLayers.includes(i.type));
-        const map = document.getElementById('map-area'); map.innerHTML = '';
-        filtered.forEach(item => {
-            const el = document.createElement('div');
-            if(item.type === 'person') { el.className = 'node node--person'; el.style.backgroundImage = `url('${item.img}')`; }
-            else { el.className = `node node--scale node--${item.type}`; el.innerHTML = item.icon; }
-            el.style.top = item.y + '%'; el.style.left = item.x + '%';
-            el.onclick = (e) => { e.stopPropagation(); showPop(item); };
-            map.appendChild(el);
-        });
-        const offL = document.getElementById('off-list'); offL.innerHTML = '';
-        const reqL = document.getElementById('req-list'); reqL.innerHTML = '';
-        filtered.forEach(item => {
-            const card = document.createElement('div'); card.className = 'item-card'; card.style.borderLeftColor = `var(--${item.type})`;
-            card.innerHTML = `<strong>${item.icon} ${item.title}</strong><p>${item.desc}</p>`;
-            (item.trade === 'offering' ? offL : reqL).appendChild(card);
-        });
-    }
-
-    function showPop(item) {
-        const p = document.getElementById('map-popup');
-        document.getElementById('pop-title').innerText = item.icon + " " + item.title;
-        document.getElementById('pop-desc').innerText = item.desc;
-        p.style.top = (item.y - 12) + "%"; p.style.left = item.x + "%"; p.style.display = "block";
-    }
-    document.getElementById('home-view').onclick = () => document.getElementById('map-popup').style.display='none';
+    window.onload = initCamera;
 </script>
 </body>
 </html>
