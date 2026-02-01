@@ -3,169 +3,189 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ENE-LOG - Ryuo Complete</title>
+    <title>ENE-LOG - The Master Prototype</title>
     <style>
         :root {
             --seiryu-blue: #00e5ff;
             --deep-blue: #001a33;
-            --header-height: 70px;
-            --person: #e91e63; --agri: #4CAF50; --skill: #673AB7; --space: #FF9800;
+            --agri: #4CAF50; --skill: #673AB7; --space: #FF9800; --person: #e91e63;
+            --header-h: 60px; --nav-h: 75px;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body, html { width: 100%; height: 100%; font-family: 'Hiragino Mincho ProN', serif; background: #000; color: white; overflow: hidden; }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body, html { width: 100%; height: 100%; font-family: 'Hiragino Mincho ProN', serif; overflow: hidden; background: var(--deep-blue); color: #333; }
 
-        /* 全体レイアウト：3層構造 */
-        #ryuo-app { display: flex; flex-direction: column; height: 100vh; position: relative; background: radial-gradient(circle at 50% 100%, #003366 0%, #000 100%); }
+        /* --- Layers --- */
+        #setup-layer { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 9999; display: flex; align-items: center; justify-content: center; color: white; text-align: center; }
+        header { position: fixed; top: 0; width: 100%; height: var(--header-h); background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: space-between; padding: 0 15px; z-index: 3000; border-bottom: 1px solid #ddd; }
+        .view { display: none; width: 100%; height: calc(100vh - var(--header-h) - var(--nav-h)); margin-top: var(--header-h); position: relative; overflow-y: auto; background: #f0f4f8; }
+        .view.active { display: block; }
+
+        /* --- Home (Map) --- */
+        #home-view { background: #07192f url('https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&q=80&w=2000') center/cover; }
+        .node { position: absolute; transform: translate(-50%, -50%); transition: 0.4s; }
+        .node--scale { width: 44px; height: 48px; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; }
+
+        /* --- Table --- */
+        .table-container { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 15px; }
+        .table-col { background: rgba(255,255,255,0.7); border-radius: 20px; padding: 12px; min-height: 400px; }
+        .item-card { background: white; border-radius: 12px; padding: 10px; margin-bottom: 10px; border-left: 5px solid #ccc; font-size: 0.75rem; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+
+        /* --- KUKAI (Dialogue) --- */
+        #ryuo-view { background: radial-gradient(circle at 50% 100%, #003366 0%, #000 100%); color: white; overflow: hidden; display: flex; flex-direction: column; }
+        #chat-box { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; z-index: 10; padding-bottom: 120px; }
+        .bubble-ryuo { align-self: flex-start; max-width: 85%; background: rgba(255,255,255,0.1); border: 1px solid rgba(0,229,255,0.3); border-radius: 20px 20px 20px 0; padding: 12px; font-size: 0.85rem; line-height: 1.6; }
+        .bubble-user { align-self: flex-end; max-width: 80%; background: var(--seiryu-blue); color: var(--deep-blue); border-radius: 20px 20px 0 20px; padding: 10px 15px; font-size: 0.85rem; font-weight: bold; }
         
-        /* 1. Header */
-        header { 
-            height: var(--header-height); display: flex; align-items: flex-end; justify-content: space-between; 
-            padding: 10px 15px; z-index: 100; backdrop-filter: blur(15px); background: rgba(0,0,0,0.5);
-            border-bottom: 1px solid rgba(0,229,255,0.2);
-        }
+        .kukai-input-area { position: absolute; bottom: 20px; width: 92%; left: 4%; background: rgba(0, 40, 80, 0.9); border: 1px solid var(--seiryu-blue); border-radius: 40px; padding: 5px; display: flex; gap: 8px; z-index: 1000; backdrop-filter: blur(15px); }
+        #chat-input { flex: 1; background: transparent; border: none; padding: 10px 15px; color: white; outline: none; font-size: 1rem; }
+        .k-btn { background: var(--seiryu-blue); color: var(--deep-blue); border: none; width: 42px; height: 42px; border-radius: 50%; font-weight: bold; }
+        .lucky-btn { background: none; border: 1px solid var(--seiryu-blue); color: var(--seiryu-blue); width: 42px; height: 42px; border-radius: 50%; font-size: 0.7rem; }
 
-        /* 2. Chat Area (可変) */
-        .chat-container { 
-            flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; 
-            z-index: 10; -webkit-overflow-scrolling: touch;
-        }
+        /* --- Gate (AR) --- */
+        #gate-view { position: fixed; inset: 0; z-index: 5000; display: none; background: #000; }
+        #particle-canvas { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
+        .kanji-word { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 100px; color: white; text-shadow: 0 0 20px var(--seiryu-blue); opacity: 0; pointer-events: none; z-index: 10; }
+        @keyframes kanjiRes { 0% { opacity:0; transform:translate(-50%,-50%) scale(0.5); } 20% { opacity:1; transform:translate(-50%,-50%) scale(1.1); } 80% { opacity:1; } 100% { opacity:0; transform:translate(-50%,-50%) scale(1.4); } }
 
-        /* 3. Input Footer (固定) */
-        .input-footer { 
-            background: rgba(0, 20, 40, 0.95); padding: 10px 15px 40px 15px; 
-            z-index: 1000; border-top: 1px solid var(--seiryu-blue);
-        }
-
-        /* --- UI Elements --- */
-        .bubble-ryuo { align-self: flex-start; max-width: 85%; background: rgba(255,255,255,0.08); border-radius: 20px 20px 20px 0; padding: 15px; font-size: 0.85rem; line-height: 1.6; border: 1px solid rgba(0,229,255,0.2); }
-        .bubble-user { align-self: flex-end; max-width: 80%; background: var(--seiryu-blue); color: var(--deep-blue); border-radius: 20px 20px 0 20px; padding: 12px; font-size: 0.85rem; font-weight: bold; }
-
-        .chat-input-wrapper { display: flex; gap: 8px; align-items: center; }
-        #chat-input { flex: 1; background: rgba(255,255,255,0.1); border: 1px solid var(--seiryu-blue); border-radius: 25px; padding: 12px 20px; color: white; outline: none; font-size: 1rem; }
+        /* --- Nav --- */
+        nav { position: fixed; bottom: 0; width: 100%; height: var(--nav-h); background: var(--deep-blue); display: flex; align-items: center; z-index: 4000; padding-bottom: 15px; }
+        .nav-btn { flex: 1; color: white; border: none; background: none; display: flex; flex-direction: column; align-items: center; font-size: 0.6rem; opacity: 0.4; }
+        .nav-btn.active { opacity: 1; color: var(--seiryu-blue); }
         
-        .lucky-btn { background: none; border: 1px solid var(--seiryu-blue); color: var(--seiryu-blue); width: 45px; height: 45px; border-radius: 50%; font-size: 0.7rem; font-weight: bold; cursor: pointer; }
-        .send-btn { background: var(--seiryu-blue); color: var(--deep-blue); border: none; width: 45px; height: 45px; border-radius: 50%; font-weight: bold; cursor: pointer; }
-
-        /* Overlay list for Archive */
-        #archive-overlay { position: fixed; inset: 0; background: rgba(0,26,51,0.98); z-index: 5000; display: none; flex-direction: column; padding: 80px 20px 20px; }
-        .archive-item { background: rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; margin-bottom: 10px; border-left: 3px solid var(--seiryu-blue); font-size: 0.75rem; }
-
-        #quantum-canvas { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+        .ripple { position: absolute; border: 2px solid var(--seiryu-blue); border-radius: 50%; transform: translate(-50%, -50%); animation: rippleOut 1.2s ease-out forwards; opacity: 0; z-index: 2; pointer-events: none; }
+        @keyframes rippleOut { 0% { width:0; height:0; opacity:0.8; } 100% { width:150vmax; height:150vmax; opacity:0; } }
     </style>
 </head>
 <body>
 
-    <div id="ryuo-app">
-        <canvas id="quantum-canvas"></canvas>
+    <div id="setup-layer" onclick="initApp()">
+        <div><div style="font-size: 60px; margin-bottom: 20px;">🐉</div><p>タップしてENE-LOGを起動</p></div>
+    </div>
 
-        <header>
-            <button onclick="history.back()" style="background:none; border:1px solid var(--seiryu-blue); color:white; padding:5px 12px; border-radius:15px; font-size:0.7rem;">↩️ Map</button>
-            <div style="font-weight:bold; font-size:0.8rem; letter-spacing: 2px;">KUKAI</div>
-            <button onclick="toggleArchive()" style="background:none; border:1px solid var(--seiryu-blue); color:var(--seiryu-blue); padding:5px 12px; border-radius:15px; font-size:0.7rem;">📜 記録</button>
-        </header>
+    <header id="main-header">
+        <div style="font-weight:bold; font-size:0.8rem; color:var(--deep-blue);">💠 ENE-LOG</div>
+        <button id="archive-btn" style="display:none; background:none; border:1px solid var(--seiryu-blue); color:var(--seiryu-blue); padding:4px 10px; border-radius:15px; font-size:0.6rem;" onclick="alert('智慧は心の中に蓄積されています')">📜 記録</button>
+    </header>
 
-        <div class="chat-container" id="chat-box">
-            <div class="bubble-ryuo">
-                やあ、観測者の君。何か心に浮かんだ「問い」はあるかな？<br>
-                左下の「占」ボタンで、今日の君とシンクロするエネルギーを占えるよ。
-            </div>
-        </div>
-        
-        <div class="input-footer">
-            <div class="chat-input-wrapper">
-                <button class="lucky-btn" onclick="drawLucky()">占</button>
-                <input type="text" id="chat-input" placeholder="問いを投げる..." onkeypress="if(event.key==='Enter') sendMessage()" onfocus="scrollToBottom()">
-                <button class="send-btn" onclick="sendMessage()">問</button>
-            </div>
+    <div id="home-view" class="view active"><div id="map-area" style="width:100%; height:100%;"></div></div>
+
+    <div id="table-view" class="view">
+        <div class="table-container">
+            <div class="table-col"><div style="font-size:0.7rem; font-weight:bold; margin-bottom:10px; border-bottom:1px solid #ddd;">🥘 持ち寄り</div><div id="off-list"></div></div>
+            <div class="table-col"><div style="font-size:0.7rem; font-weight:bold; margin-bottom:10px; border-bottom:1px solid #ddd;">🍽 リクエスト</div><div id="req-list"></div></div>
         </div>
     </div>
 
-    <div id="archive-overlay">
-        <h3 style="margin-bottom:20px; color:var(--seiryu-blue); text-align:center;">智慧の記録</h3>
-        <div id="archive-list" style="flex:1; overflow-y:auto;"></div>
-        <button onclick="toggleArchive()" style="margin-top:20px; background:var(--seiryu-blue); color:var(--deep-blue); border:none; width:100%; padding:15px; border-radius:25px; font-weight:bold;">閉じる</button>
+    <div id="ryuo-view" class="view">
+        <div id="chat-box">
+            <div class="bubble-ryuo">やあ。何か心に浮かんだ「問い」はあるかな？</div>
+        </div>
+        <div class="kukai-input-area">
+            <button class="lucky-btn" onclick="drawLucky()">占</button>
+            <input type="text" id="chat-input" placeholder="KUKAIに話しかける..." onkeypress="if(event.key==='Enter') sendKukai()">
+            <button class="k-btn" onclick="sendKukai()">問</button>
+        </div>
+        <div id="ripple-layer"></div>
     </div>
+
+    <div id="gate-view">
+        <video id="webcam" autoplay playsinline muted></video>
+        <canvas id="particle-canvas"></canvas>
+        <button style="position:absolute; top:30px; left:20px; z-index:6000; background:rgba(0,0,0,0.5); color:white; border:1px solid var(--seiryu-blue); padding:8px 15px; border-radius:20px; font-size:0.7rem;" onclick="exitGate()">↩️ Map</button>
+        <div id="kanji-output" class="kanji-word"></div>
+        <div style="position:absolute; bottom:50px; left:50%; transform:translateX(-50%); width:80px; height:80px; border-radius:50%; border:5px solid #fff; background:rgba(255,255,255,0.2); z-index:6000;" onclick="observe()"></div>
+    </div>
+
+    <nav id="main-nav">
+        <button class="nav-btn active" onclick="switchView('home-view', this)">🗺<span>Map</span></button>
+        <button class="nav-btn" onclick="switchView('table-view', this)">🥘<span>Table</span></button>
+        <button class="nav-btn" onclick="switchView('ryuo-view', this)">🐲<span>KUKAI</span></button>
+        <button class="nav-btn" onclick="enterGate()">⛩<span>Gate</span></button>
+    </nav>
 
 <script>
-    const chatBox = document.getElementById('chat-box');
-    const chatInput = document.getElementById('chat-input');
-    let archiveData = [];
-
-    const energies = [
-        { n: '人', i: '👤', c: 'var(--person)' },
-        { n: '農', i: '🌱', c: 'var(--agri)' },
-        { n: '智慧', i: '💡', c: 'var(--skill)' },
-        { n: '場', i: '🏠', c: 'var(--space)' }
+    let audioCtx;
+    let db = [
+        { type:'person', icon:'👤', title:'茂谷 幸弘', x:25, y:35, mode:'give' },
+        { type:'agri', icon:'🌱', title:'納豆菌の実験', x:60, y:50, mode:'want' }
     ];
 
-    function scrollToBottom() {
-        setTimeout(() => { chatBox.scrollTop = chatBox.scrollHeight; }, 150);
+    function initApp() {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        document.getElementById('setup-layer').style.display = 'none';
+        render();
     }
 
-    function drawLucky() {
-        const res = energies[Math.floor(Math.random()*energies.length)];
-        const msg = `今の君の波動は「${res.n} ${res.i}」とシンクロしているみたいだよ。このエネルギーを意識して過ごしてみてね！`;
-        addBubble(msg, 'ryuo');
-        scrollToBottom();
+    function switchView(id, btn) {
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('archive-btn').style.display = (id === 'ryuo-view') ? 'block' : 'none';
     }
 
-    function sendMessage() {
-        const text = chatInput.value.trim();
-        if (!text) return;
-        addBubble(text, 'user');
-        chatInput.value = '';
-        scrollToBottom();
-
-        setTimeout(() => {
-            const reply = "その問いかけ、すごく素敵な響きだね。君が意識を向けることで、未来の可能性が一つに形作られていくんだ。";
-            addBubble(reply, 'ryuo');
-            archiveData.unshift({ q: text, a: reply, d: new Date().toLocaleTimeString() });
-            updateArchiveUI();
-            scrollToBottom();
-        }, 1000);
+    function render() {
+        const map = document.getElementById('map-area'); map.innerHTML = '';
+        db.forEach(item => {
+            const el = document.createElement('div'); el.className = `node node--scale node--${item.type}`;
+            el.innerHTML = item.icon; el.style.top = item.y+'%'; el.style.left = item.x+'%';
+            map.appendChild(el);
+        });
+        const off = document.getElementById('off-list'); off.innerHTML = '';
+        const req = document.getElementById('req-list'); req.innerHTML = '';
+        db.forEach(item => {
+            const card = document.createElement('div'); card.className = 'item-card';
+            card.style.borderLeftColor = `var(--${item.type})`; card.innerHTML = `<strong>${item.icon} ${item.title}</strong>`;
+            if(item.mode === 'give') off.appendChild(card); else req.appendChild(card);
+        });
     }
 
+    // --- Audio ---
+    function playPichan() {
+        const now = audioCtx.currentTime; const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+        osc.type = 'sine'; osc.frequency.setValueAtTime(1100, now); osc.frequency.exponentialRampToValueAtTime(1700, now+0.05);
+        gain.gain.setValueAtTime(0.4, now); gain.gain.exponentialRampToValueAtTime(0.001, now+0.8);
+        osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(now+0.8);
+    }
+
+    // --- KUKAI ---
+    function sendKukai() {
+        const input = document.getElementById('chat-input'); const text = input.value.trim(); if(!text) return;
+        playPichan(); createRipple(); addBubble(text, 'user'); input.value = '';
+        setTimeout(() => { addBubble("その問いかけ、とても素敵な響きだね。君が意識を向けることで、未来の可能性が一つに形作られていくんだ。", 'ryuo'); }, 1200);
+    }
     function addBubble(text, type) {
-        const div = document.createElement('div');
-        div.className = type === 'user' ? 'bubble-user' : 'bubble-ryuo';
-        div.innerText = text;
-        chatBox.appendChild(div);
+        const box = document.getElementById('chat-box'); const div = document.createElement('div');
+        div.className = type === 'user' ? 'bubble-user' : 'bubble-ryuo'; div.innerText = text;
+        box.appendChild(div); box.scrollTop = box.scrollHeight;
+    }
+    function createRipple() {
+        const rip = document.createElement('div'); rip.className = 'ripple'; rip.style.top = '50%'; rip.style.left = '50%';
+        document.getElementById('ripple-layer').appendChild(rip); setTimeout(() => rip.remove(), 1200);
+    }
+    function drawLucky() {
+        const res = ['人 👤', '農 🌱', '智慧 💡', '場 🏠'][Math.floor(Math.random()*4)];
+        addBubble(`今日の君のラッキーエナジーは「${res}」だよ！意識してみてね。`, 'ryuo');
     }
 
-    function toggleArchive() {
-        const overlay = document.getElementById('archive-overlay');
-        overlay.style.display = (overlay.style.display === 'flex') ? 'none' : 'flex';
+    // --- Brave Gate ---
+    const canvas = document.getElementById('particle-canvas'); const ctx = canvas.getContext('2d');
+    async function enterGate() {
+        document.getElementById('gate-view').style.display = 'block';
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        document.getElementById('webcam').srcObject = stream;
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
     }
-
-    function updateArchiveUI() {
-        const list = document.getElementById('archive-list');
-        list.innerHTML = archiveData.map(item => `
-            <div class="archive-item">
-                <div style="color:var(--seiryu-blue); font-size:0.6rem;">${item.d}</div>
-                <div><strong>問:</strong> ${item.q}</div>
-                <div style="color:var(--seiryu-blue); margin-top:5px;"><strong>KUKAI:</strong> ${item.a}</div>
-            </div>
-        `).join('');
+    function exitGate() {
+        document.getElementById('gate-view').style.display = 'none';
+        const s = document.getElementById('webcam').srcObject; if(s) s.getTracks().forEach(t=>t.stop());
     }
-
-    // --- Particle logic (Simplified for performance) ---
-    const canvas = document.getElementById('quantum-canvas');
-    const ctx = canvas.getContext('2d');
-    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-    window.addEventListener('resize', resize);
-    resize();
-    function animate() {
-        ctx.clearRect(0,0,canvas.width,canvas.height);
-        ctx.fillStyle = "rgba(0, 229, 255, 0.2)";
-        for(let i=0; i<30; i++) {
-            ctx.beginPath();
-            ctx.arc(Math.random()*canvas.width, Math.random()*canvas.height, 1, 0, Math.PI*2);
-            ctx.fill();
-        }
-        requestAnimationFrame(animate);
+    function observe() {
+        playPichan();
+        const kOut = document.getElementById('kanji-output'); kOut.innerText = ['龍','響','生','耕','結'][Math.floor(Math.random()*5)];
+        kOut.style.animation = 'none'; void kOut.offsetWidth; kOut.style.animation = 'kanjiRes 2.8s forwards';
     }
-    animate();
 </script>
 </body>
 </html>
